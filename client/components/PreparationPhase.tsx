@@ -1,12 +1,17 @@
 // PreparationPhase.tsx
 
 import React, { useEffect, useState } from 'react'
-import { GameState, Action } from '../../models/types'
+import { GameState, Action, Resource } from '../../models/types'
 import {
   actions,
+  additionalResources,
   events,
   generateStartingInventory,
+  initialSkills,
 } from '../utilities/gameData'
+import SkillTree from './SkillTree'
+import DiscoveredItemModal from './DiscoveredItemModal'
+import IntegratedResourceDisplay from './ResourceDisplay'
 
 interface PreparationPhaseProps {
   gameState: GameState
@@ -25,7 +30,12 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
   setGameState,
   endPreparationPhase,
 }) => {
+  const [discoveredItem, setDiscoveredItem] = useState<Resource | null>(null)
   const [freeActionUsed, setFreeActionUsed] = useState(false)
+  const [selectedAction, setSelectedAction] = useState<Action | null>(null)
+  const [unlockedSkills, setUnlockedSkills] = useState<string[]>([])
+  const freeActions = actions.filter((action) => action.isFree)
+  const regularActions = actions.filter((action) => !action.isFree)
 
   useEffect(() => {
     setGameState((prevState) => ({
@@ -63,6 +73,25 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
     }
   }, [gameState.currentAction, gameState.currentEvent, setGameState])
 
+  useEffect(() => {
+    if (!gameState.skills || gameState.skills.length === 0) {
+      setGameState((prevState) => ({
+        ...prevState,
+        skills: initialSkills,
+      }))
+    }
+  }, [gameState.skills, setGameState])
+
+  const handleSkillUnlock = (skillId: string) => {
+    if (!unlockedSkills.includes(skillId)) {
+      setUnlockedSkills((prevUnlocked) => [...prevUnlocked, skillId])
+      setGameState((prevState) => ({
+        ...prevState,
+        preparednessScore: prevState.preparednessScore + 5,
+      }))
+    }
+  }
+
   const handleEventChoice = (choice: {
     text: string
     effect: (gameState: GameState) => GameState
@@ -75,6 +104,10 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
   }
 
   const handleActionSelect = (action: Action) => {
+    setSelectedAction(action)
+  }
+
+  const performAction = (action: Action) => {
     if (action.isFree) {
       if (freeActionUsed) {
         alert("You've already used your free action this turn!")
@@ -101,86 +134,190 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
         setFreeActionUsed(false)
       }, action.duration * 1000)
     }
+    setSelectedAction(null)
+  }
+
+  const performFreeAction = (action: Action) => {
+    const updatedGameState = action.immediateEffect(gameState)
+    setGameState({
+      ...updatedGameState,
+      preparednessScore: updatedGameState.preparednessScore + 1,
+    })
+    if (Math.random() < 0.2) {
+      // 30% chance to discover an item
+      const randomItem =
+        additionalResources[
+          Math.floor(Math.random() * additionalResources.length)
+        ]
+      setDiscoveredItem(randomItem)
+    }
+  }
+
+  const handleKeepItem = () => {
+    if (discoveredItem) {
+      setGameState((prevState) => ({
+        ...prevState,
+        resources: [...prevState.resources, discoveredItem],
+      }))
+    }
+    setDiscoveredItem(null)
+  }
+
+  const handleDiscardItem = () => {
+    setDiscoveredItem(null)
+  }
+
+  const handleActionKeyPress = (
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    action: Action,
+  ) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleActionSelect(action)
+    }
+  }
+
+  const handleFreeActionKeyPress = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    action: Action,
+  ) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      performFreeAction(action)
+    }
   }
 
   return (
     <div className="preparation-phase">
-      <h2>PREPARATION Phase</h2>
-      <div className="timer">
-        Time Remaining: {formatTime(gameState.timeRemaining)}
+      <h2 className="phase-title">PREPARATION Phase</h2>
+      <div className="game-info">
+        <div className="timer">
+          Time Remaining: {formatTime(gameState.timeRemaining)}
+        </div>
+        <div className="preparedness-score">
+          Preparedness Score: {gameState.preparednessScore}
+        </div>
       </div>
-      <div className="preparedness-score">
-        Preparedness Score: {gameState.preparednessScore}
-      </div>
-      <div className="resources">
-        <h3>Resources:</h3>
-        {['House', 'Car', 'Workplace', 'On Person'].map((location) => (
-          <div key={location}>
-            <h4>{location}</h4>
-            <ul>
-              {gameState.resources
-                .filter((resource) => resource.location === location)
-                .map((resource) => (
-                  <li key={resource.id}>
-                    {resource.icon} {resource.name}: {resource.quantity}
-                  </li>
-                ))}
-            </ul>
+
+      <div className="main-content">
+        <div className="action-list">
+          <div className="free-actions">
+            <h3 className="category-title">Free Actions</h3>
+            {freeActions.map((action) => (
+              <button
+                key={action.id}
+                className="free-action-items"
+                onClick={() => performFreeAction(action)}
+                onKeyDown={(e) => handleFreeActionKeyPress(e, action)}
+                tabIndex={0}
+                aria-pressed="false"
+              >
+                <span className="action-icon">{action.icon}</span>
+                <span className="action-name">{action.name}</span>
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-      {!gameState.currentAction && !gameState.currentEvent && (
-        <div className="actions">
-          <h3>Available Actions:</h3>
-          {Object.entries(
-            Object.groupBy(actions, (action) => action.category),
-          ).map(([category, categoryActions]) => (
-            <div key={category}>
-              <h4>{category}</h4>
-              {(categoryActions as Action[]).map((action) => (
-                <div key={action.id} className="action-item">
-                  <h5>
-                    {action.name} {action.icon}
-                  </h5>
-                  <p>{action.description}</p>
-                  <p>Duration: {action.duration}s</p>
-                  <p>Long-term effect: {action.longTermEffect}</p>
-                  {action.consequences && (
-                    <p>Potential consequences: {action.consequences}</p>
-                  )}
-                  <button
-                    onClick={() => handleActionSelect(action)}
-                    disabled={action.requirements.some(
-                      (req) =>
-                        !gameState.resources.find((r) => r.id === req) ||
-                        (action.isFree && freeActionUsed),
-                    )}
-                  >
-                    {action.isFree ? 'Do Now (Free)' : 'Act Now'}
-                  </button>
-                </div>
+          <div className="regular-actions">
+            <h3 className="category-title">Actions</h3>
+            {!gameState.currentAction && !gameState.currentEvent && (
+              <>
+                {Object.entries(
+                  Object.groupBy(regularActions, (action) => action.category),
+                ).map(([category, categoryActions]) => (
+                  <div key={category} className="action-category">
+                    <h4 className="category-title">{category}</h4>
+                    {(categoryActions as Action[]).map((action) => (
+                      <button
+                        key={action.id}
+                        className={`action-item ${selectedAction?.id === action.id ? 'selected' : ''}`}
+                        onClick={() => handleActionSelect(action)}
+                        onKeyPress={(e) => handleActionKeyPress(e, action)}
+                        tabIndex={0}
+                        aria-pressed={selectedAction?.id === action.id}
+                      >
+                        <span className="action-icon">{action.icon}</span>
+                        <span className="action-name">{action.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="action-details">
+          {selectedAction && (
+            <div>
+              <h3 className="selected-action-title">{selectedAction.name}</h3>
+              <p className="action-description">{selectedAction.description}</p>
+              <p className="action-effect">
+                Effect: {selectedAction.longTermEffect}
+              </p>
+              {selectedAction.consequences && (
+                <p className="action-consequence">
+                  Consequence: {selectedAction.consequences}
+                </p>
+              )}
+              <button
+                onClick={() => performAction(selectedAction)}
+                disabled={selectedAction.requirements.some(
+                  (req) =>
+                    !gameState.resources.find((r) => r.id === req) ||
+                    (selectedAction.isFree && freeActionUsed),
+                )}
+                className="perform-action-button"
+              >
+                {selectedAction.isFree ? 'Do Now (Free)' : 'Act Now'}
+              </button>
+            </div>
+          )}
+
+          {gameState.currentAction && (
+            <div className="current-action">
+              <h3>Current Action:</h3>
+              <p>{gameState.currentAction.name}</p>
+            </div>
+          )}
+
+          {gameState.currentEvent && (
+            <div className="event">
+              <h3>{gameState.currentEvent.name}</h3>
+              <p>{gameState.currentEvent.description}</p>
+              {gameState.currentEvent.choices.map((choice, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleEventChoice(choice)}
+                  className="event-choice-button"
+                >
+                  {choice.text}
+                </button>
               ))}
             </div>
-          ))}
+          )}
         </div>
+      </div>
+      {discoveredItem && (
+        <DiscoveredItemModal
+          item={discoveredItem}
+          onKeep={handleKeepItem}
+          onDiscard={handleDiscardItem}
+        />
       )}
-      {gameState.currentAction && (
-        <div className="current-action">
-          <h3>Current Action:</h3>
-          <p>{gameState.currentAction.name}</p>
+      <div className="resources-and-skills">
+        <div className="resources-section">
+          <h3>Resources:</h3>
+          <IntegratedResourceDisplay resources={gameState.resources} />
         </div>
-      )}
-      {gameState.currentEvent && (
-        <div className="event">
-          <h3>{gameState.currentEvent.name}</h3>
-          <p>{gameState.currentEvent.description}</p>
-          {gameState.currentEvent.choices.map((choice, index) => (
-            <button key={index} onClick={() => handleEventChoice(choice)}>
-              {choice.text}
-            </button>
-          ))}
+
+        <div className="skill-tree-section">
+          <h3>Skills</h3>
+          <SkillTree
+            skills={gameState.skills}
+            unlockedSkills={unlockedSkills}
+            onSkillClick={handleSkillUnlock}
+          />
         </div>
-      )}
+      </div>
     </div>
   )
 }

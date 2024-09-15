@@ -11,6 +11,7 @@ const MainGame: React.FC = () => {
     phase: 'PREPARATION',
     timeRemaining: 5 * 60, // 5 minutes in seconds
     resources: initialResources,
+    skills: [],
     currentAction: null,
     currentEvent: null,
     preparednessScore: 0,

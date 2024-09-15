@@ -14,6 +14,7 @@ export interface Resource {
   category: ResourceCategory
   location: string
   icon: string
+  level?: number
 }
 
 export interface Action {
@@ -70,8 +71,20 @@ export interface GameState {
   phase: 'PREPARATION' | 'SURVIVAL'
   timeRemaining: number
   resources: Resource[]
+  skills: Skill[]
   currentAction: Action | null
   currentEvent: Event | null
   survivalPhase?: SurvivalPhaseState
   preparednessScore: number
+}
+
+export interface Skill {
+  id: string
+  name: string
+  level: number
+  icon: string
+  description: string
+  requirements: string[]
+  effects: string[]
+  maxLevel: number
 }
