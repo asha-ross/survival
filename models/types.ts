@@ -1,10 +1,19 @@
 // types.ts
 
+export type ResourceCategory =
+  | 'Basic'
+  | 'Tools'
+  | 'Skills'
+  | 'Social'
+  | 'Personal'
+
 export interface Resource {
   id: string
   name: string
   quantity: number
-  category: 'Basic' | 'Tools' | 'Skills' | 'Social' | 'Personal'
+  category: ResourceCategory
+  location: string
+  icon: string
 }
 
 export interface Action {
@@ -14,16 +23,47 @@ export interface Action {
   duration: number
   description: string
   requirements: string[]
-  immediateEffect: (resources: Resource[]) => Resource[]
+  immediateEffect: (gameState: GameState) => GameState // Updated this line
   longTermEffect: string
   consequences?: string
+  isFree: boolean
+  icon: string
 }
 
 export interface Event {
   id: string
   name: string
   description: string
-  choices: { text: string; effect: (resources: Resource[]) => Resource[] }[]
+  icon: string
+  choices: Array<{
+    text: string
+    effect: (gameState: GameState) => GameState
+  }>
+}
+
+export type DisasterType = 'Earthquake' | 'Flood' | 'ZombiePlague'
+
+export type Location = 'Home' | 'Work' | 'City' | 'Suburbs'
+
+export interface Scenario {
+  id: string
+  description: string
+  choices: {
+    text: string
+    effect: (gameState: GameState) => GameState // And this line
+  }[]
+}
+
+export interface SurvivalPhaseState {
+  stage:
+    | 'InitialDisaster'
+    | 'AccessResources'
+    | 'SurvivalChallenges'
+    | 'LongTermSurvival'
+  disasterType: DisasterType
+  currentLocation: Location
+  day: number
+  currentScenario: Scenario | null
 }
 
 export interface GameState {
@@ -32,4 +72,6 @@ export interface GameState {
   resources: Resource[]
   currentAction: Action | null
   currentEvent: Event | null
+  survivalPhase?: SurvivalPhaseState
+  preparednessScore: number
 }

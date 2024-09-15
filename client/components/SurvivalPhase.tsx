@@ -1,70 +1,96 @@
-// SurvivalPhase.tsx
-
-import React, { useState, useEffect, useCallback } from 'react'
-import { GameState } from '../../models/types'
+import React, { useEffect } from 'react'
+import { GameState, SurvivalPhaseState } from '../../models/types'
+import {
+  getRandomDisasterType,
+  getRandomLocation,
+  generateScenario,
+} from '../utilities/survivalHelpers'
 
 interface SurvivalPhaseProps {
   gameState: GameState
   setGameState: React.Dispatch<React.SetStateAction<GameState>>
 }
 
+const initialSurvivalState: SurvivalPhaseState = {
+  stage: 'InitialDisaster',
+  disasterType: 'Earthquake',
+  currentLocation: 'Home',
+  day: 1,
+  currentScenario: null,
+}
+
 const SurvivalPhase: React.FC<SurvivalPhaseProps> = ({
   gameState,
   setGameState,
 }) => {
-  const [day, setDay] = useState(1)
-
-  const checkGameOver = useCallback(() => {
-    const basicResources = gameState.resources.filter(
-      (r) => r.category === 'Basic',
-    )
-    return basicResources.every((r) => r.quantity === 0)
-  }, [gameState.resources])
+  useEffect(() => {
+    // Initialize survival phase
+    const disasterType = getRandomDisasterType()
+    const startingLocation = getRandomLocation()
+    setGameState((prev) => ({
+      ...prev,
+      survivalPhase: {
+        ...initialSurvivalState,
+        disasterType,
+        currentLocation: startingLocation,
+      },
+    }))
+  }, [setGameState])
 
   useEffect(() => {
-    const consumeResources = () => {
-      setGameState((prevState) => {
-        const updatedResources = prevState.resources.map((resource) => {
-          if (resource.category === 'Basic') {
-            return { ...resource, quantity: Math.max(0, resource.quantity - 1) }
-          }
-          return resource
-        })
-
-        return {
-          ...prevState,
-          resources: updatedResources,
-        }
-      })
+    // Generate scenarios based on current stage
+    if (gameState.survivalPhase && !gameState.survivalPhase.currentScenario) {
+      const newScenario = generateScenario(
+        gameState.survivalPhase.stage,
+        gameState.survivalPhase.disasterType,
+        gameState.survivalPhase.currentLocation,
+      )
+      setGameState((prev) => ({
+        ...prev,
+        survivalPhase: {
+          ...prev.survivalPhase!,
+          currentScenario: newScenario,
+        },
+      }))
     }
+  }, [gameState.survivalPhase, setGameState])
 
-    const timer = setInterval(() => {
-      setDay((prevDay) => prevDay + 1)
-      consumeResources()
-    }, 10000) // Every 10 seconds represents a new day
+  const handleChoice = (choiceIndex: number) => {
+    if (gameState.survivalPhase?.currentScenario) {
+      const choice =
+        gameState.survivalPhase.currentScenario.choices[choiceIndex]
+      const newGameState = choice.effect(gameState)
+      setGameState({
+        ...newGameState,
+        survivalPhase: {
+          ...newGameState.survivalPhase!,
+          currentScenario: null,
+        },
+      })
+      // Progress to next stage or day based on game logic
+    }
+  }
 
-    return () => clearInterval(timer)
-  }, [setGameState])
+  if (!gameState.survivalPhase) {
+    return <div>Loading Survival Phase...</div>
+  }
 
   return (
     <div className="survival-phase">
-      <h2>SURVIVAL Phase</h2>
-      <p>Day: {day}</p>
-      <p>You are now in the survival phase. Use your resources wisely!</p>
-      <div className="resources">
-        <h3>Resources:</h3>
-        <ul>
-          {gameState.resources.map((resource) => (
-            <li key={resource.id}>
-              {resource.name}: {resource.quantity}
-            </li>
-          ))}
-        </ul>
-      </div>
-      {checkGameOver() && (
-        <p className="game-over">
-          Game Over! You have run out of basic resources.
-        </p>
+      <h2>Survival Phase - Day {gameState.survivalPhase.day}</h2>
+      <p>Disaster: {gameState.survivalPhase.disasterType}</p>
+      <p>Location: {gameState.survivalPhase.currentLocation}</p>
+      {gameState.survivalPhase.currentScenario && (
+        <div className="scenario">
+          <p>{gameState.survivalPhase.currentScenario.description}</p>
+          {gameState.survivalPhase.currentScenario.choices.map(
+            (choice, index) => (
+              <button key={index} onClick={() => handleChoice(index)}>
+                {choice.text}
+              </button>
+            ),
+          )}
+        </div>
       )}
     </div>
   )

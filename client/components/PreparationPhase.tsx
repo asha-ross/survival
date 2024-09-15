@@ -1,8 +1,12 @@
 // PreparationPhase.tsx
 
-import React, { useEffect } from 'react'
-import { GameState, Action, Resource } from '../../models/types'
-import { actions, events } from '../utilities/gameData'
+import React, { useEffect, useState } from 'react'
+import { GameState, Action } from '../../models/types'
+import {
+  actions,
+  events,
+  generateStartingInventory,
+} from '../utilities/gameData'
 
 interface PreparationPhaseProps {
   gameState: GameState
@@ -21,6 +25,15 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
   setGameState,
   endPreparationPhase,
 }) => {
+  const [freeActionUsed, setFreeActionUsed] = useState(false)
+
+  useEffect(() => {
+    setGameState((prevState) => ({
+      ...prevState,
+      resources: [...prevState.resources, ...generateStartingInventory()],
+    }))
+  }, [setGameState])
+
   useEffect(() => {
     if (gameState.timeRemaining > 0) {
       const timer = setTimeout(() => {
@@ -48,33 +61,46 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
         }))
       }
     }
-  }, [gameState, setGameState])
-
-  const handleActionSelect = (action: Action) => {
-    setGameState((prevState) => ({
-      ...prevState,
-      currentAction: action,
-      timeRemaining: prevState.timeRemaining - action.duration,
-    }))
-
-    setTimeout(() => {
-      setGameState((prevState) => ({
-        ...prevState,
-        resources: action.immediateEffect([...prevState.resources]),
-        currentAction: null,
-      }))
-    }, action.duration * 1000)
-  }
+  }, [gameState.currentAction, gameState.currentEvent, setGameState])
 
   const handleEventChoice = (choice: {
     text: string
-    effect: (resources: Resource[]) => Resource[]
+    effect: (gameState: GameState) => GameState
   }) => {
-    setGameState((prevState) => ({
-      ...prevState,
-      resources: choice.effect([...prevState.resources]),
+    const updatedGameState = choice.effect(gameState)
+    setGameState({
+      ...updatedGameState,
       currentEvent: null,
-    }))
+    })
+  }
+
+  const handleActionSelect = (action: Action) => {
+    if (action.isFree) {
+      if (freeActionUsed) {
+        alert("You've already used your free action this turn!")
+        return
+      }
+      const updatedGameState = action.immediateEffect(gameState)
+      setGameState(updatedGameState)
+      setFreeActionUsed(true)
+    } else {
+      setGameState((prevState) => ({
+        ...prevState,
+        currentAction: action,
+        timeRemaining: prevState.timeRemaining - action.duration,
+      }))
+
+      setTimeout(() => {
+        setGameState((prevState) => {
+          const updatedGameState = action.immediateEffect(prevState)
+          return {
+            ...updatedGameState,
+            currentAction: null,
+          }
+        })
+        setFreeActionUsed(false)
+      }, action.duration * 1000)
+    }
   }
 
   return (
@@ -83,27 +109,39 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
       <div className="timer">
         Time Remaining: {formatTime(gameState.timeRemaining)}
       </div>
+      <div className="preparedness-score">
+        Preparedness Score: {gameState.preparednessScore}
+      </div>
       <div className="resources">
         <h3>Resources:</h3>
-        <ul>
-          {gameState.resources.map((resource) => (
-            <li key={resource.id}>
-              {resource.name}: {resource.quantity}
-            </li>
-          ))}
-        </ul>
+        {['House', 'Car', 'Workplace', 'On Person'].map((location) => (
+          <div key={location}>
+            <h4>{location}</h4>
+            <ul>
+              {gameState.resources
+                .filter((resource) => resource.location === location)
+                .map((resource) => (
+                  <li key={resource.id}>
+                    {resource.icon} {resource.name}: {resource.quantity}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))}
       </div>
       {!gameState.currentAction && !gameState.currentEvent && (
         <div className="actions">
           <h3>Available Actions:</h3>
           {Object.entries(
-            Object.groupBy(actions, (action: Action) => action.category),
+            Object.groupBy(actions, (action) => action.category),
           ).map(([category, categoryActions]) => (
             <div key={category}>
               <h4>{category}</h4>
               {(categoryActions as Action[]).map((action) => (
                 <div key={action.id} className="action-item">
-                  <h5>{action.name}</h5>
+                  <h5>
+                    {action.name} {action.icon}
+                  </h5>
                   <p>{action.description}</p>
                   <p>Duration: {action.duration}s</p>
                   <p>Long-term effect: {action.longTermEffect}</p>
@@ -113,10 +151,12 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
                   <button
                     onClick={() => handleActionSelect(action)}
                     disabled={action.requirements.some(
-                      (req) => !gameState.resources.find((r) => r.id === req),
+                      (req) =>
+                        !gameState.resources.find((r) => r.id === req) ||
+                        (action.isFree && freeActionUsed),
                     )}
                   >
-                    Act Now
+                    {action.isFree ? 'Do Now (Free)' : 'Act Now'}
                   </button>
                 </div>
               ))}

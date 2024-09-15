@@ -2,6 +2,7 @@
 
 import React from 'react'
 import MainGame from './MainGame'
+import '../styles/main.css'
 
 const App: React.FC = () => {
   return (

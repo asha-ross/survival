@@ -77,3 +77,100 @@
 5. Study basic animal husbandry for future livestock
 
 Each of these actions could have different time costs, resource requirements, and both immediate and long-term benefits in the game. Some might provide immediate resource gains, while others could unlock special abilities or improve chances of survival in the later phase of the game.
+
+
+
+
+# Survival Phase Game Design
+
+## 1. Initial Disaster Stage
+
+### Components:
+- Disaster Type (e.g., Earthquake, Flood, Zombie Plague)
+- Player's Starting Location (Home, Work, etc.)
+- Immediate Challenges
+
+### Gameplay:
+1. Randomly select a disaster type
+2. Determine player's starting location
+3. Present immediate challenges based on disaster and location
+4. Player must make decisions to survive initial impact
+
+### Example Scenarios:
+- Earthquake: "The ground is shaking violently. Do you:
+  a) Take cover under a sturdy desk
+  b) Run outside
+  c) Try to grab supplies before taking cover"
+- Zombie Plague: "Infected individuals are attacking people in the streets. Do you:
+  a) Barricade yourself in your current location
+  b) Try to make it to a vehicle
+  c) Attempt to reach a loved one's location"
+
+## 2. Access to Resources Stage
+
+### Components:
+- Travel Challenges
+- Resource Retrieval
+
+### Gameplay:
+1. If player is not at home, they must navigate to their primary resource cache
+2. Present travel challenges based on the disaster type
+3. Player must make decisions on how to overcome obstacles
+
+### Example Scenarios:
+- "The roads are blocked with debris. Do you:
+  a) Attempt to clear a path (requires time and energy)
+  b) Find an alternative route (takes longer but safer)
+  c) Abandon your vehicle and proceed on foot"
+
+## 3. Survival Challenges Stage
+
+### Components:
+- Random Events
+- Resource Management
+- Health Management
+- Social Interactions
+
+### Gameplay:
+1. Present daily or periodic challenges
+2. Player must use resources, skills, and make decisions to overcome challenges
+3. Track resource depletion, health status, and social relationships
+
+### Example Scenarios:
+- "You hear a cry for help nearby. Do you:
+  a) Investigate and potentially assist
+  b) Ignore it to conserve resources
+  c) Call out to see if they come to you"
+- "Your water supply is running low. Do you:
+  a) Ration your remaining water
+  b) Try to find a new water source
+  c) Use your water purification skills on a questionable source"
+
+## 4. Long-term Survival Stage
+
+### Components:
+- Community Building
+- Long-term Resource Planning
+- Potential Rescue or Evacuation Events
+
+### Gameplay:
+1. Present opportunities for forming alliances or building a community
+2. Introduce long-term planning challenges (e.g., sustainable food sources)
+3. Periodically present potential rescue scenarios
+
+### Example Scenarios:
+- "A group of survivors asks to join your camp. Do you:
+  a) Welcome them and share resources
+  b) Turn them away to conserve your supplies
+  c) Allow them to stay but keep resources separate"
+- "You receive a weak radio transmission about a rescue point 50 miles away. Do you:
+  a) Stay put and wait for clearer information
+  b) Prepare for a dangerous journey
+  c) Try to boost your radio signal to get more info"
+
+## Implementation Considerations:
+1. Create a state machine to manage different stages of the Survival Phase
+2. Implement a scenario system that can present situations and choices
+3. Develop a resource management system that tracks supplies, health, and skills
+4. Create an event generation system for random challenges and opportunities
+5. Implement a scoring or progress tracking system to determine success or failure

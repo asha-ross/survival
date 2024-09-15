@@ -13,6 +13,7 @@ const MainGame: React.FC = () => {
     resources: initialResources,
     currentAction: null,
     currentEvent: null,
+    preparednessScore: 0,
   })
 
   const endPreparationPhase = useCallback(() => {
