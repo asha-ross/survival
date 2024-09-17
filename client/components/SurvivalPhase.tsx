@@ -31,6 +31,9 @@ const SurvivalPhase: React.FC<SurvivalPhaseProps> = ({
         currentDisaster: null,
         currentScenario: null,
         preparednessScore: 0,
+        timeRemaining: 0,
+        currentAction: null,
+        currentEvent: null,
       }
       setSurvivalState(initialState)
     } else if (!survivalState.currentScenario) {
@@ -58,7 +61,11 @@ const SurvivalPhase: React.FC<SurvivalPhaseProps> = ({
     }
   }
 
-  if (!survivalState.disasterType || !survivalState.currentLocation) {
+  if (
+    !survivalState ||
+    !survivalState.disasterType ||
+    !survivalState.currentLocation
+  ) {
     return <div>Loading Survival Phase...</div>
   }
 

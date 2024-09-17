@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { OverallGameState, Action, Resource } from '../../models/types'
+import {
+  OverallGameState,
+  Action,
+  Resource,
+  GameAction,
+} from '../../models/types'
 import {
   actions,
   additionalResources,
@@ -13,19 +18,20 @@ import IntegratedResourceDisplay from './ResourceDisplay'
 
 interface PreparationPhaseProps {
   gameState: OverallGameState
-  setGameState: React.Dispatch<React.SetStateAction<OverallGameState>>
+  dispatch: React.Dispatch<GameAction>
   endPreparationPhase: () => void
 }
 
 const PreparationPhase: React.FC<PreparationPhaseProps> = ({
   gameState,
-  setGameState,
+  dispatch,
   endPreparationPhase,
 }) => {
   const [storyStep, setStoryStep] = useState(0)
   const [currentChoice, setCurrentChoice] = useState<string | null>(null)
   const [isProcessingItem, setIsProcessingItem] = useState(false)
   const [itemsDiscovered, setItemsDiscovered] = useState<Resource[]>([])
+  const [itemToKeep, setItemToKeep] = useState<Resource | null>(null)
   const [freeActionUsed, setFreeActionUsed] = useState(false)
   const [selectedAction, setSelectedAction] = useState<Action | null>(null)
   const [unlockedSkills, setUnlockedSkills] = useState<string[]>([])
@@ -33,53 +39,65 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
   const regularActions = actions.filter((action) => !action.isFree)
 
   useEffect(() => {
-    setGameState((prevState) => ({
-      ...prevState,
-      resources: [...prevState.resources, ...generateStartingInventory()],
-      skills: initialSkills,
-    }))
-  }, [setGameState])
+    // Initialize game state only once
+    if (gameState.resources.length === 0 && gameState.skills.length === 0) {
+      dispatch({
+        type: 'UPDATE_GAME_STATE',
+        payload: {
+          resources: generateStartingInventory(),
+          skills: initialSkills,
+        },
+      })
+    }
+  }, [dispatch, gameState.resources.length, gameState.skills.length])
 
   useEffect(() => {
     let timer: NodeJS.Timeout
     if (gameState.timeRemaining > 0) {
       timer = setTimeout(() => {
-        setGameState((prevState) => ({
-          ...prevState,
-          timeRemaining: prevState.timeRemaining - 1,
-        }))
+        dispatch({
+          type: 'UPDATE_GAME_STATE',
+          payload: { timeRemaining: gameState.timeRemaining - 1 },
+        })
       }, 1000)
     } else {
       endPreparationPhase()
     }
     return () => clearTimeout(timer)
-  }, [gameState.timeRemaining, setGameState, endPreparationPhase])
+  }, [gameState.timeRemaining, dispatch, endPreparationPhase])
 
   useEffect(() => {
     if (!gameState.currentAction && !gameState.currentEvent) {
       const randomEventChance = Math.random()
       if (randomEventChance < 0.1) {
         const randomEvent = events[Math.floor(Math.random() * events.length)]
-        setGameState((prevState) => ({
-          ...prevState,
-          currentEvent: randomEvent,
-        }))
+        dispatch({
+          type: 'UPDATE_GAME_STATE',
+          payload: { currentEvent: randomEvent },
+        })
       }
     }
-  }, [gameState.currentAction, gameState.currentEvent, setGameState])
+  }, [gameState.currentAction, gameState.currentEvent, dispatch])
 
   const handleSkillUnlock = useCallback(
     (skillId: string) => {
       if (!unlockedSkills.includes(skillId)) {
         setUnlockedSkills((prevUnlocked) => [...prevUnlocked, skillId])
-        setGameState((prevState) => ({
-          ...prevState,
-          preparednessScore: prevState.preparednessScore + 5,
-        }))
+        dispatch({
+          type: 'UPDATE_GAME_STATE',
+          payload: {
+            preparednessScore: gameState.preparednessScore + 5,
+            skills: gameState.skills.map((skill) =>
+              skill.id === skillId
+                ? { ...skill, level: skill.level + 1 }
+                : skill,
+            ),
+          },
+        })
       }
       setStoryStep((prevStep) => prevStep + 1)
     },
-    [unlockedSkills, setGameState],
+    [unlockedSkills, dispatch, gameState.preparednessScore, gameState.skills],
   )
 
   const handleEventChoice = useCallback(
@@ -88,13 +106,13 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
       effect: (gameState: OverallGameState) => OverallGameState
     }) => {
       const updatedGameState = choice.effect(gameState)
-      setGameState(() => ({
-        ...updatedGameState,
-        currentEvent: null,
-      }))
+      dispatch({
+        type: 'UPDATE_GAME_STATE',
+        payload: { ...updatedGameState, currentEvent: null },
+      })
       setStoryStep((prevStep) => prevStep + 1)
     },
-    [gameState, setGameState],
+    [gameState, dispatch],
   )
 
   const handleChoice = useCallback((choice: string) => {
@@ -113,17 +131,18 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
         alert("You've already used your free action this turn!")
         return
       }
-      setGameState((prevState) => {
-        const updatedGameState = action.immediateEffect(prevState)
-        return {
+      const updatedGameState = action.immediateEffect(gameState)
+      dispatch({
+        type: 'UPDATE_GAME_STATE',
+        payload: {
           ...updatedGameState,
           preparednessScore: updatedGameState.preparednessScore + 1,
-        }
+        },
       })
       setFreeActionUsed(true)
       setStoryStep((prevStep) => prevStep + 1)
     },
-    [freeActionUsed, setGameState],
+    [freeActionUsed, dispatch, gameState],
   )
 
   const performAction = useCallback(
@@ -131,18 +150,18 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
       if (action.isFree) {
         performFreeAction(action)
       } else {
-        setGameState((prevState) => ({
-          ...prevState,
-          currentAction: action,
-          timeRemaining: prevState.timeRemaining - action.duration,
-        }))
+        dispatch({
+          type: 'UPDATE_GAME_STATE',
+          payload: {
+            currentAction: action,
+            timeRemaining: gameState.timeRemaining - action.duration,
+          },
+        })
         setTimeout(() => {
-          setGameState((prevState) => {
-            const updatedGameState = action.immediateEffect(prevState)
-            return {
-              ...updatedGameState,
-              currentAction: null,
-            }
+          const updatedGameState = action.immediateEffect(gameState)
+          dispatch({
+            type: 'UPDATE_GAME_STATE',
+            payload: { ...updatedGameState, currentAction: null },
           })
           setFreeActionUsed(false)
           setStoryStep((prevStep) => prevStep + 1)
@@ -150,7 +169,7 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
       }
       setSelectedAction(null)
     },
-    [performFreeAction, setGameState],
+    [performFreeAction, dispatch, gameState],
   )
 
   const handleKeepItem = useCallback(() => {
@@ -158,19 +177,28 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
     setIsProcessingItem(true)
     setItemsDiscovered((prevItems) => {
       if (prevItems.length > 0) {
-        const [itemToKeep, ...remainingItems] = prevItems
-        setGameState((prevState) => ({
-          ...prevState,
-          resources: [...prevState.resources, itemToKeep],
-          preparednessScore: prevState.preparednessScore + 5,
-        }))
+        const [firstItem, ...remainingItems] = prevItems
+        setItemToKeep(firstItem)
         return remainingItems
       }
       return prevItems
     })
-    setIsProcessingItem(false)
-    setStoryStep((prevStep) => prevStep + 1)
-  }, [setGameState, isProcessingItem])
+  }, [isProcessingItem])
+
+  useEffect(() => {
+    if (itemToKeep) {
+      dispatch({
+        type: 'UPDATE_GAME_STATE',
+        payload: {
+          resources: [...gameState.resources, itemToKeep],
+          preparednessScore: gameState.preparednessScore + 5,
+        },
+      })
+      setItemToKeep(null)
+      setIsProcessingItem(false)
+      setStoryStep((prevStep) => prevStep + 1)
+    }
+  }, [itemToKeep, dispatch, gameState.resources, gameState.preparednessScore])
 
   const handleActionSelect = useCallback((action: Action) => {
     setSelectedAction(action)
@@ -239,7 +267,6 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
             />
           </div>
         )
-
       case 3:
         return (
           <div className="story-step">

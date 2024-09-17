@@ -130,20 +130,16 @@ export interface RandomEvent {
   frequency: number // 0-1, chance of occurring each day
 }
 
-export interface SurvivalGameState {
-  phase: 'SURVIVAL'
-  stage:
-    | 'InitialDisaster'
-    | 'AccessResources'
-    | 'SurvivalChallenges'
-    | 'LongTermSurvival'
+export interface SurvivalGameState extends OverallGameState {
+  stage: string
   disasterType: DisasterType
   currentLocation: Location
   day: number
-  resources: Resource[]
-  skills: Skill[]
   currentDisaster: Disaster | null
   currentScenario: SurvivalScenario | null
-  preparednessScore: number
   // Add any other properties specific to the survival phase
 }
+
+export type GameAction =
+  | { type: 'UPDATE_GAME_STATE'; payload: Partial<OverallGameState> }
+  | { type: 'END_PREPARATION_PHASE' }
