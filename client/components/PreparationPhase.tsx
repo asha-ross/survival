@@ -1,7 +1,5 @@
-// PreparationPhase.tsx
-
-import React, { useEffect, useState } from 'react'
-import { GameState, Action, Resource } from '../../models/types'
+import React, { useCallback, useEffect, useState } from 'react'
+import { OverallGameState, Action, Resource } from '../../models/types'
 import {
   actions,
   additionalResources,
@@ -14,15 +12,9 @@ import DiscoveredItemModal from './DiscoveredItemModal'
 import IntegratedResourceDisplay from './ResourceDisplay'
 
 interface PreparationPhaseProps {
-  gameState: GameState
-  setGameState: React.Dispatch<React.SetStateAction<GameState>>
+  gameState: OverallGameState
+  setGameState: React.Dispatch<React.SetStateAction<OverallGameState>>
   endPreparationPhase: () => void
-}
-
-const formatTime = (seconds: number) => {
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
 const PreparationPhase: React.FC<PreparationPhaseProps> = ({
@@ -30,7 +22,10 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
   setGameState,
   endPreparationPhase,
 }) => {
-  const [discoveredItem, setDiscoveredItem] = useState<Resource | null>(null)
+  const [storyStep, setStoryStep] = useState(0)
+  const [currentChoice, setCurrentChoice] = useState<string | null>(null)
+  const [isProcessingItem, setIsProcessingItem] = useState(false)
+  const [itemsDiscovered, setItemsDiscovered] = useState<Resource[]>([])
   const [freeActionUsed, setFreeActionUsed] = useState(false)
   const [selectedAction, setSelectedAction] = useState<Action | null>(null)
   const [unlockedSkills, setUnlockedSkills] = useState<string[]>([])
@@ -41,29 +36,29 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
     setGameState((prevState) => ({
       ...prevState,
       resources: [...prevState.resources, ...generateStartingInventory()],
+      skills: initialSkills,
     }))
   }, [setGameState])
 
   useEffect(() => {
+    let timer: NodeJS.Timeout
     if (gameState.timeRemaining > 0) {
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setGameState((prevState) => ({
           ...prevState,
           timeRemaining: prevState.timeRemaining - 1,
         }))
       }, 1000)
-
-      return () => clearTimeout(timer)
     } else {
       endPreparationPhase()
     }
+    return () => clearTimeout(timer)
   }, [gameState.timeRemaining, setGameState, endPreparationPhase])
 
   useEffect(() => {
     if (!gameState.currentAction && !gameState.currentEvent) {
       const randomEventChance = Math.random()
       if (randomEventChance < 0.1) {
-        // 10% chance of event occurring
         const randomEvent = events[Math.floor(Math.random() * events.length)]
         setGameState((prevState) => ({
           ...prevState,
@@ -73,178 +68,251 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
     }
   }, [gameState.currentAction, gameState.currentEvent, setGameState])
 
-  useEffect(() => {
-    if (!gameState.skills || gameState.skills.length === 0) {
-      setGameState((prevState) => ({
-        ...prevState,
-        skills: initialSkills,
+  const handleSkillUnlock = useCallback(
+    (skillId: string) => {
+      if (!unlockedSkills.includes(skillId)) {
+        setUnlockedSkills((prevUnlocked) => [...prevUnlocked, skillId])
+        setGameState((prevState) => ({
+          ...prevState,
+          preparednessScore: prevState.preparednessScore + 5,
+        }))
+      }
+      setStoryStep((prevStep) => prevStep + 1)
+    },
+    [unlockedSkills, setGameState],
+  )
+
+  const handleEventChoice = useCallback(
+    (choice: {
+      text: string
+      effect: (gameState: OverallGameState) => OverallGameState
+    }) => {
+      const updatedGameState = choice.effect(gameState)
+      setGameState(() => ({
+        ...updatedGameState,
+        currentEvent: null,
       }))
-    }
-  }, [gameState.skills, setGameState])
+      setStoryStep((prevStep) => prevStep + 1)
+    },
+    [gameState, setGameState],
+  )
 
-  const handleSkillUnlock = (skillId: string) => {
-    if (!unlockedSkills.includes(skillId)) {
-      setUnlockedSkills((prevUnlocked) => [...prevUnlocked, skillId])
-      setGameState((prevState) => ({
-        ...prevState,
-        preparednessScore: prevState.preparednessScore + 5,
-      }))
-    }
-  }
+  const handleChoice = useCallback((choice: string) => {
+    setCurrentChoice(choice)
+    const randomResource =
+      additionalResources[
+        Math.floor(Math.random() * additionalResources.length)
+      ]
+    setItemsDiscovered([randomResource])
+    setStoryStep((prevStep) => prevStep + 1)
+  }, [])
 
-  const handleEventChoice = (choice: {
-    text: string
-    effect: (gameState: GameState) => GameState
-  }) => {
-    const updatedGameState = choice.effect(gameState)
-    setGameState({
-      ...updatedGameState,
-      currentEvent: null,
-    })
-  }
-
-  const handleActionSelect = (action: Action) => {
-    setSelectedAction(action)
-  }
-
-  const performAction = (action: Action) => {
-    if (action.isFree) {
+  const performFreeAction = useCallback(
+    (action: Action) => {
       if (freeActionUsed) {
         alert("You've already used your free action this turn!")
         return
       }
-      const updatedGameState = action.immediateEffect(gameState)
-      setGameState(updatedGameState)
+      setGameState((prevState) => {
+        const updatedGameState = action.immediateEffect(prevState)
+        return {
+          ...updatedGameState,
+          preparednessScore: updatedGameState.preparednessScore + 1,
+        }
+      })
       setFreeActionUsed(true)
-    } else {
-      setGameState((prevState) => ({
-        ...prevState,
-        currentAction: action,
-        timeRemaining: prevState.timeRemaining - action.duration,
-      }))
+      setStoryStep((prevStep) => prevStep + 1)
+    },
+    [freeActionUsed, setGameState],
+  )
 
-      setTimeout(() => {
-        setGameState((prevState) => {
-          const updatedGameState = action.immediateEffect(prevState)
-          return {
-            ...updatedGameState,
-            currentAction: null,
-          }
-        })
-        setFreeActionUsed(false)
-      }, action.duration * 1000)
-    }
-    setSelectedAction(null)
-  }
+  const performAction = useCallback(
+    (action: Action) => {
+      if (action.isFree) {
+        performFreeAction(action)
+      } else {
+        setGameState((prevState) => ({
+          ...prevState,
+          currentAction: action,
+          timeRemaining: prevState.timeRemaining - action.duration,
+        }))
+        setTimeout(() => {
+          setGameState((prevState) => {
+            const updatedGameState = action.immediateEffect(prevState)
+            return {
+              ...updatedGameState,
+              currentAction: null,
+            }
+          })
+          setFreeActionUsed(false)
+          setStoryStep((prevStep) => prevStep + 1)
+        }, action.duration * 1000)
+      }
+      setSelectedAction(null)
+    },
+    [performFreeAction, setGameState],
+  )
 
-  const performFreeAction = (action: Action) => {
-    const updatedGameState = action.immediateEffect(gameState)
-    setGameState({
-      ...updatedGameState,
-      preparednessScore: updatedGameState.preparednessScore + 1,
+  const handleKeepItem = useCallback(() => {
+    if (isProcessingItem) return
+    setIsProcessingItem(true)
+    setItemsDiscovered((prevItems) => {
+      if (prevItems.length > 0) {
+        const [itemToKeep, ...remainingItems] = prevItems
+        setGameState((prevState) => ({
+          ...prevState,
+          resources: [...prevState.resources, itemToKeep],
+          preparednessScore: prevState.preparednessScore + 5,
+        }))
+        return remainingItems
+      }
+      return prevItems
     })
-    if (Math.random() < 0.2) {
-      // 30% chance to discover an item
-      const randomItem =
-        additionalResources[
-          Math.floor(Math.random() * additionalResources.length)
-        ]
-      setDiscoveredItem(randomItem)
-    }
-  }
+    setIsProcessingItem(false)
+    setStoryStep((prevStep) => prevStep + 1)
+  }, [setGameState, isProcessingItem])
 
-  const handleKeepItem = () => {
-    if (discoveredItem) {
-      setGameState((prevState) => ({
-        ...prevState,
-        resources: [...prevState.resources, discoveredItem],
-      }))
-    }
-    setDiscoveredItem(null)
-  }
+  const handleActionSelect = useCallback((action: Action) => {
+    setSelectedAction(action)
+  }, [])
 
-  const handleDiscardItem = () => {
-    setDiscoveredItem(null)
-  }
+  const handleDiscardItem = useCallback(() => {
+    if (isProcessingItem) return
+    setIsProcessingItem(true)
+    setItemsDiscovered([])
+    setIsProcessingItem(false)
+    setStoryStep((prevStep) => prevStep + 1)
+  }, [isProcessingItem])
 
-  const handleActionKeyPress = (
-    e: React.KeyboardEvent<HTMLButtonElement>,
-    action: Action,
-  ) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      handleActionSelect(action)
-    }
-  }
+  const renderStoryStep = () => {
+    switch (storyStep) {
+      case 0:
+        return (
+          <div className="story-step">
+            <p>
+              You wake up on your day off. Your house is a mess, your car needs
+              cleaning, and that load of laundry is growing ever larger... but
+              the day is beautiful, and you want to have fun. You:
+            </p>
+            <button onClick={() => handleChoice('clean')}>
+              Clean your house.
+            </button>
+            <button onClick={() => handleChoice('car')}>Wash your car.</button>
+            <button onClick={() => handleChoice('outside')}>
+              Go walk around outside.
+            </button>
+          </div>
+        )
+      case 1:
+        return (
+          <div className="story-step">
+            <p>
+              While{' '}
+              {currentChoice === 'clean'
+                ? 'cleaning your house'
+                : currentChoice === 'car'
+                  ? 'washing your car'
+                  : 'walking around outside'}
+              , you find something interesting.
+            </p>
+            {itemsDiscovered.length > 0 && (
+              <DiscoveredItemModal
+                item={itemsDiscovered[0]}
+                onKeep={handleKeepItem}
+                onDiscard={handleDiscardItem}
+                isProcessing={isProcessingItem}
+              />
+            )}
+          </div>
+        )
+      case 2:
+        return (
+          <div className="story-step">
+            <p>
+              You decide to spend the day learning something new. What would you
+              like to focus on?
+            </p>
+            <SkillTree
+              skills={gameState.skills}
+              unlockedSkills={unlockedSkills}
+              onSkillClick={handleSkillUnlock}
+            />
+          </div>
+        )
 
-  const handleFreeActionKeyPress = (
-    event: React.KeyboardEvent<HTMLButtonElement>,
-    action: Action,
-  ) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      performFreeAction(action)
+      case 3:
+        return (
+          <div className="story-step">
+            <p>
+              Working on your skills has cleared your mind! You want to get
+              something else done. What would you like to do?
+            </p>
+            <div className="free-actions">
+              {freeActions.map((action) => (
+                <button
+                  key={action.id}
+                  className="free-action-items"
+                  onClick={() => performFreeAction(action)}
+                  disabled={freeActionUsed}
+                >
+                  <span className="action-icon">{action.icon}</span>
+                  <span className="action-name">{action.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      case 4:
+        return (
+          <div className="story-step">
+            <p>You still have some energy left. What would you like to do?</p>
+            <div className="regular-actions">
+              {Object.entries(
+                Object.groupBy(regularActions, (action) => action.category),
+              ).map(([category, categoryActions]) => (
+                <div key={category} className="action-category">
+                  <h4 className="category-title">{category}</h4>
+                  {(categoryActions as Action[]).map((action) => (
+                    <button
+                      key={action.id}
+                      className={`action-item ${selectedAction?.id === action.id ? 'selected' : ''}`}
+                      onClick={() => handleActionSelect(action)}
+                    >
+                      <span className="action-icon">{action.icon}</span>
+                      <span className="action-name">{action.name}</span>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      case 5:
+        return (
+          <div className="story-step">
+            <p>
+              As evening approaches, you start to notice some unusual things
+              happening around you...
+            </p>
+            <button onClick={endPreparationPhase}>What Happens Next?</button>
+          </div>
+        )
+      default:
+        return null
     }
   }
 
   return (
     <div className="preparation-phase">
-      <h2 className="phase-title">PREPARATION Phase</h2>
+      <h2 className="phase-title">A Day in the Life</h2>
       <div className="game-info">
-        <div className="timer">
-          Time Remaining: {formatTime(gameState.timeRemaining)}
-        </div>
         <div className="preparedness-score">
           Preparedness Score: {gameState.preparednessScore}
         </div>
       </div>
 
       <div className="main-content">
-        <div className="action-list">
-          <div className="free-actions">
-            <h3 className="category-title">Free Actions</h3>
-            {freeActions.map((action) => (
-              <button
-                key={action.id}
-                className="free-action-items"
-                onClick={() => performFreeAction(action)}
-                onKeyDown={(e) => handleFreeActionKeyPress(e, action)}
-                tabIndex={0}
-                aria-pressed="false"
-              >
-                <span className="action-icon">{action.icon}</span>
-                <span className="action-name">{action.name}</span>
-              </button>
-            ))}
-          </div>
-          <div className="regular-actions">
-            <h3 className="category-title">Actions</h3>
-            {!gameState.currentAction && !gameState.currentEvent && (
-              <>
-                {Object.entries(
-                  Object.groupBy(regularActions, (action) => action.category),
-                ).map(([category, categoryActions]) => (
-                  <div key={category} className="action-category">
-                    <h4 className="category-title">{category}</h4>
-                    {(categoryActions as Action[]).map((action) => (
-                      <button
-                        key={action.id}
-                        className={`action-item ${selectedAction?.id === action.id ? 'selected' : ''}`}
-                        onClick={() => handleActionSelect(action)}
-                        onKeyPress={(e) => handleActionKeyPress(e, action)}
-                        tabIndex={0}
-                        aria-pressed={selectedAction?.id === action.id}
-                      >
-                        <span className="action-icon">{action.icon}</span>
-                        <span className="action-name">{action.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                ))}
-              </>
-            )}
-          </div>
-        </div>
-
+        {renderStoryStep()}
         <div className="action-details">
           {selectedAction && (
             <div>
@@ -296,26 +364,11 @@ const PreparationPhase: React.FC<PreparationPhaseProps> = ({
           )}
         </div>
       </div>
-      {discoveredItem && (
-        <DiscoveredItemModal
-          item={discoveredItem}
-          onKeep={handleKeepItem}
-          onDiscard={handleDiscardItem}
-        />
-      )}
+
       <div className="resources-and-skills">
         <div className="resources-section">
-          <h3>Resources:</h3>
+          <h3>Inventory:</h3>
           <IntegratedResourceDisplay resources={gameState.resources} />
-        </div>
-
-        <div className="skill-tree-section">
-          <h3>Skills</h3>
-          <SkillTree
-            skills={gameState.skills}
-            unlockedSkills={unlockedSkills}
-            onSkillClick={handleSkillUnlock}
-          />
         </div>
       </div>
     </div>

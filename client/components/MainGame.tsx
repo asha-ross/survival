@@ -1,13 +1,14 @@
 // MainGame.tsx
 
 import React, { useState, useCallback } from 'react'
-import { GameState } from '../../models/types'
+import { OverallGameState, SurvivalGameState } from '../../models/types'
 import PreparationPhase from './PreparationPhase'
 import SurvivalPhase from './SurvivalPhase'
 import { initialResources } from '../utilities/gameData'
+import '../styles/main.css'
 
 const MainGame: React.FC = () => {
-  const [gameState, setGameState] = useState<GameState>({
+  const [gameState, setGameState] = useState<OverallGameState>({
     phase: 'PREPARATION',
     timeRemaining: 5 * 60, // 5 minutes in seconds
     resources: initialResources,
@@ -17,28 +18,44 @@ const MainGame: React.FC = () => {
     preparednessScore: 0,
   })
 
+  const [survivalState, setSurvivalState] = useState<SurvivalGameState | null>(
+    null,
+  )
+
   const endPreparationPhase = useCallback(() => {
-    setGameState((prevState) => ({
-      ...prevState,
+    const initialSurvivalState: SurvivalGameState = {
       phase: 'SURVIVAL',
-      timeRemaining: 0,
-    }))
-    console.log('PREPARATION phase ended. Transitioning to SURVIVAL phase...')
-  }, [])
+      stage: 'InitialDisaster',
+      disasterType: 'Earthquake',
+      currentLocation: 'Home',
+      day: 1,
+      resources: gameState.resources,
+      skills: gameState.skills,
+      currentDisaster: null,
+      currentScenario: null,
+      preparednessScore: gameState.preparednessScore,
+    }
+    setSurvivalState(initialSurvivalState)
+  }, [gameState])
 
   return (
-    <div className="survival-game">
-      <h1>Survival Game</h1>
-      {gameState.phase === 'PREPARATION' ? (
-        <PreparationPhase
-          gameState={gameState}
-          setGameState={setGameState}
-          endPreparationPhase={endPreparationPhase}
-        />
-      ) : (
-        <SurvivalPhase gameState={gameState} setGameState={setGameState} />
-      )}
-    </div>
+    <>
+      <h1 className="header">Survival</h1>
+      <div className="survival-game">
+        {!survivalState ? (
+          <PreparationPhase
+            gameState={gameState}
+            setGameState={setGameState}
+            endPreparationPhase={endPreparationPhase}
+          />
+        ) : (
+          <SurvivalPhase
+            survivalState={survivalState}
+            setSurvivalState={setSurvivalState}
+          />
+        )}
+      </div>
+    </>
   )
 }
 

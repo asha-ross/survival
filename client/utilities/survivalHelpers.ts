@@ -1,9 +1,8 @@
 import {
   DisasterType,
-  GameState,
   Location,
-  Scenario,
-  SurvivalPhaseState,
+  SurvivalGameState,
+  SurvivalScenario,
 } from '../../models/types'
 
 export function getRandomDisasterType(): DisasterType {
@@ -17,41 +16,33 @@ export function getRandomLocation(): Location {
 }
 
 export function generateScenario(
-  stage: SurvivalPhaseState['stage'],
+  stage: SurvivalGameState['stage'],
   disasterType: DisasterType,
-  location: Location,
-): Scenario {
-  const scenarios: Record<SurvivalPhaseState['stage'], Scenario[]> = {
+  currentLocation: Location,
+): SurvivalScenario {
+  const scenarios: Record<SurvivalGameState['stage'], SurvivalScenario[]> = {
     InitialDisaster: [
       {
         id: 'earthquake_home',
         description: 'The ground is shaking violently. What do you do?',
         choices: [
           {
+            id: 'take_cover',
             text: 'Take cover under a sturdy desk',
-            effect: (gameState: GameState) => {
-              // Implement effect (e.g., slightly increase chances of survival)
-              return {
-                ...gameState,
-                survivalPhase: {
-                  ...gameState.survivalPhase!,
-                  stage: 'AccessResources',
-                },
-              }
-            },
+            consequence: (state: SurvivalGameState) => ({
+              ...state,
+              stage: 'AccessResources',
+              preparednessScore: state.preparednessScore + 5,
+            }),
           },
           {
+            id: 'run_outside',
             text: 'Run outside',
-            effect: (gameState: GameState) => {
-              // Implement effect (e.g., risk of injury but potential to help others)
-              return {
-                ...gameState,
-                survivalPhase: {
-                  ...gameState.survivalPhase!,
-                  stage: 'AccessResources',
-                },
-              }
-            },
+            consequence: (state: SurvivalGameState) => ({
+              ...state,
+              stage: 'AccessResources',
+              preparednessScore: state.preparednessScore - 5,
+            }),
           },
         ],
       },
@@ -64,30 +55,22 @@ export function generateScenario(
           "The road to your supply cache is blocked by debris. What's your plan?",
         choices: [
           {
+            id: 'clear_path',
             text: 'Try to clear the path',
-            effect: (gameState: GameState) => {
-              // Implement effect (e.g., time passes, energy decreases, but path cleared)
-              return {
-                ...gameState,
-                survivalPhase: {
-                  ...gameState.survivalPhase!,
-                  stage: 'SurvivalChallenges',
-                },
-              }
-            },
+            consequence: (state: SurvivalGameState) => ({
+              ...state,
+              stage: 'SurvivalChallenges',
+              preparednessScore: state.preparednessScore + 3,
+            }),
           },
           {
+            id: 'find_alternative',
             text: 'Find an alternative route',
-            effect: (gameState: GameState) => {
-              // Implement effect (e.g., takes longer but safer)
-              return {
-                ...gameState,
-                survivalPhase: {
-                  ...gameState.survivalPhase!,
-                  stage: 'SurvivalChallenges',
-                },
-              }
-            },
+            consequence: (state: SurvivalGameState) => ({
+              ...state,
+              stage: 'SurvivalChallenges',
+              preparednessScore: state.preparednessScore + 1,
+            }),
           },
         ],
       },
@@ -99,30 +82,22 @@ export function generateScenario(
         description: 'Your water supply is running low. What will you do?',
         choices: [
           {
+            id: 'ration_water',
             text: 'Ration the remaining water',
-            effect: (gameState: GameState) => {
-              // Implement effect (e.g., conserve water but risk dehydration)
-              return {
-                ...gameState,
-                survivalPhase: {
-                  ...gameState.survivalPhase!,
-                  day: gameState.survivalPhase!.day + 1,
-                },
-              }
-            },
+            consequence: (state: SurvivalGameState) => ({
+              ...state,
+              day: state.day + 1,
+              preparednessScore: state.preparednessScore + 2,
+            }),
           },
           {
+            id: 'search_water',
             text: 'Search for a new water source',
-            effect: (gameState: GameState) => {
-              // Implement effect (e.g., chance to find water but risk exposure)
-              return {
-                ...gameState,
-                survivalPhase: {
-                  ...gameState.survivalPhase!,
-                  day: gameState.survivalPhase!.day + 1,
-                },
-              }
-            },
+            consequence: (state: SurvivalGameState) => ({
+              ...state,
+              day: state.day + 1,
+              preparednessScore: state.preparednessScore + 4,
+            }),
           },
         ],
       },
@@ -135,30 +110,22 @@ export function generateScenario(
           'A group of survivors asks to join your camp. How do you respond?',
         choices: [
           {
+            id: 'welcome_survivors',
             text: 'Welcome them and share resources',
-            effect: (gameState: GameState) => {
-              // Implement effect (e.g., increase social score but decrease resources)
-              return {
-                ...gameState,
-                survivalPhase: {
-                  ...gameState.survivalPhase!,
-                  day: gameState.survivalPhase!.day + 1,
-                },
-              }
-            },
+            consequence: (state: SurvivalGameState) => ({
+              ...state,
+              day: state.day + 1,
+              preparednessScore: state.preparednessScore + 5,
+            }),
           },
           {
+            id: 'turn_away_survivors',
             text: 'Turn them away to conserve supplies',
-            effect: (gameState: GameState) => {
-              // Implement effect (e.g., conserve resources but decrease social score)
-              return {
-                ...gameState,
-                survivalPhase: {
-                  ...gameState.survivalPhase!,
-                  day: gameState.survivalPhase!.day + 1,
-                },
-              }
-            },
+            consequence: (state: SurvivalGameState) => ({
+              ...state,
+              day: state.day + 1,
+              preparednessScore: state.preparednessScore - 3,
+            }),
           },
         ],
       },

@@ -24,7 +24,7 @@ export interface Action {
   duration: number
   description: string
   requirements: string[]
-  immediateEffect: (gameState: GameState) => GameState // Updated this line
+  immediateEffect: (gameState: OverallGameState) => OverallGameState // Updated this line
   longTermEffect: string
   consequences?: string
   isFree: boolean
@@ -38,7 +38,7 @@ export interface Event {
   icon: string
   choices: Array<{
     text: string
-    effect: (gameState: GameState) => GameState
+    effect: (gameState: OverallGameState) => OverallGameState
   }>
 }
 
@@ -51,7 +51,7 @@ export interface Scenario {
   description: string
   choices: {
     text: string
-    effect: (gameState: GameState) => GameState // And this line
+    effect: (gameState: OverallGameState) => OverallGameState // And this line
   }[]
 }
 
@@ -67,7 +67,7 @@ export interface SurvivalPhaseState {
   currentScenario: Scenario | null
 }
 
-export interface GameState {
+export interface OverallGameState {
   phase: 'PREPARATION' | 'SURVIVAL'
   timeRemaining: number
   resources: Resource[]
@@ -87,4 +87,63 @@ export interface Skill {
   requirements: string[]
   effects: string[]
   maxLevel: number
+}
+
+export type DisasterScenario = SurvivalScenario
+export interface Disaster {
+  id: string
+  name: string
+  description: string
+  initialScenarios: SurvivalScenario[] // Changed from Scenario to SurvivalScenario
+  ongoingEffects: (gameState: OverallGameState) => OverallGameState
+}
+
+export interface SurvivalScenario {
+  id: string
+  description: string
+  choices: Choice[]
+}
+
+export interface Choice {
+  id: string
+  text: string
+  consequence: (state: SurvivalGameState) => SurvivalGameState
+  requiredSkills?: string[]
+  requiredResources?: string[]
+}
+
+export interface SurvivalAction {
+  id: string
+  name: string
+  description: string
+  execute: (gameState: OverallGameState) => OverallGameState
+  requiredSkills?: string[]
+  requiredResources?: string[]
+  cooldown?: number
+}
+
+export interface RandomEvent {
+  id: string
+  name: string
+  description: string
+  occur: (gameState: OverallGameState) => OverallGameState
+  frequency: number // 0-1, chance of occurring each day
+}
+
+export interface SurvivalGameState {
+  phase: 'SURVIVAL'
+  stage:
+    | 'InitialDisaster'
+    | 'AccessResources'
+    | 'SurvivalChallenges'
+    | 'LongTermSurvival'
+  disasterType: DisasterType
+  currentLocation: Location
+  day: number
+  resources: Resource[]
+  skills: Skill[]
+  currentDisaster: Disaster | null
+  currentScenario: SurvivalScenario | null
+  preparednessScore: number
+  // Add any other properties specific to the survival phase
 }
