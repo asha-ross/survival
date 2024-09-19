@@ -4,7 +4,7 @@ import {
   RandomEvent,
   SurvivalAction,
   SurvivalScenario,
-} from '../../models/types'
+} from '../types/types'
 
 export const disasters: Disaster[] = [
   {

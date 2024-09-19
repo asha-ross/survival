@@ -3,7 +3,7 @@ import {
   Location,
   SurvivalGameState,
   SurvivalScenario,
-} from '../../models/types'
+} from '../types/types'
 
 export function getRandomDisasterType(): DisasterType {
   const disasters: DisasterType[] = ['Earthquake', 'Flood', 'ZombiePlague']

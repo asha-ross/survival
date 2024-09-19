@@ -1,703 +1,7 @@
-// gameData.ts
+import { GameAction, GameState, ResourceCategory } from '../types/types'
+import { generateRandomItem } from './gameData'
 
-import {
-  Resource,
-  Action,
-  Event,
-  ResourceCategory,
-  Skill,
-  OverallGameState,
-} from '../../models/types'
-
-export const initialResources: Resource[] = [
-  {
-    id: 'food',
-    name: 'Canned Food',
-    quantity: 3,
-    category: 'Basic',
-    location: 'House',
-    icon: '🥫',
-  },
-  {
-    id: 'water',
-    name: 'Water Bottle',
-    quantity: 1,
-    category: 'Basic',
-    location: 'House',
-    icon: '💧',
-  },
-  {
-    id: 'firstAid',
-    name: 'First Aid Kit',
-    quantity: 1,
-    category: 'Basic',
-    location: 'House',
-    icon: '🩹',
-  },
-  {
-    id: 'health',
-    name: 'Health',
-    quantity: 100,
-    category: 'Personal',
-    location: 'On Person',
-    icon: '❤️',
-  },
-]
-
-const possibleStartingItems: Resource[] = [
-  {
-    id: 'flashlight',
-    name: 'Flashlight',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '🔦',
-  },
-  {
-    id: 'batteries',
-    name: 'Batteries',
-    quantity: 2,
-    category: 'Tools',
-    location: 'House',
-    icon: '🔋',
-  },
-  {
-    id: 'canOpener',
-    name: 'Can Opener',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '🥫🔧',
-  },
-  {
-    id: 'matchbox',
-    name: 'Matchbox',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '🔥',
-  },
-  {
-    id: 'blanket',
-    name: 'Blanket',
-    quantity: 1,
-    category: 'Basic',
-    location: 'House',
-    icon: '🛏️',
-  },
-  {
-    id: 'carJumpCables',
-    name: 'Car Jump Cables',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Car',
-    icon: '🚗⚡',
-  },
-  {
-    id: 'carFirstAidKit',
-    name: 'First Aid Kit',
-    quantity: 1,
-    category: 'Basic',
-    location: 'Car',
-    icon: '🚗🩹',
-  },
-  {
-    id: 'workgloves',
-    name: 'Work Gloves',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Workplace',
-    icon: '🧤',
-  },
-  {
-    id: 'waterBottle',
-    name: 'Reusable Water Bottle',
-    quantity: 1,
-    category: 'Basic',
-    location: 'Workplace',
-    icon: '🍶',
-  },
-  {
-    id: 'pocketknife',
-    name: 'Pocket Knife',
-    quantity: 1,
-    category: 'Tools',
-    location: 'On Person',
-    icon: '🔪',
-  },
-]
-
-export const additionalResources: Resource[] = [
-  // Obvious survival items
-  {
-    id: 'sleepingBag',
-    name: 'Sleeping Bag',
-    quantity: 1,
-    category: 'Basic',
-    location: 'House',
-    icon: '🛌',
-  },
-  {
-    id: 'compass',
-    name: 'Compass',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '🧭',
-  },
-  {
-    id: 'ropeLong',
-    name: 'Long Rope',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Garage',
-    icon: '🪢',
-  },
-  {
-    id: 'tarp',
-    name: 'Tarp',
-    quantity: 1,
-    category: 'Basic',
-    location: 'Garage',
-    icon: '⛺',
-  },
-  {
-    id: 'multitool',
-    name: 'Multi-tool',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Workplace',
-    icon: '🛠️',
-  },
-  {
-    id: 'whistle',
-    name: 'Emergency Whistle',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '🛎️',
-  },
-  {
-    id: 'waterFilter',
-    name: 'Portable Water Filter',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '🚰',
-  },
-  {
-    id: 'solarCharger',
-    name: 'Solar Charger',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '🔋☀️',
-  },
-  {
-    id: 'fireStarter',
-    name: 'Fire Starter Kit',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Garage',
-    icon: '🔥',
-  },
-  {
-    id: 'emergencyBlanket',
-    name: 'Emergency Thermal Blanket',
-    quantity: 1,
-    category: 'Basic',
-    location: 'Car',
-    icon: '🥶',
-  },
-  {
-    id: 'headlamp',
-    name: 'LED Headlamp',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Garage',
-    icon: '👨‍🦲💡',
-  },
-  {
-    id: 'paracord',
-    name: 'Paracord',
-    quantity: 50,
-    category: 'Tools',
-    location: 'Garage',
-    icon: '🧵',
-  },
-  {
-    id: 'signalMirror',
-    name: 'Signal Mirror',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Car',
-    icon: '🪞',
-  },
-
-  // Everyday items that could be useful
-  {
-    id: 'ductTape',
-    name: 'Duct Tape',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Garage',
-    icon: '📼',
-  },
-  {
-    id: 'aluminumFoil',
-    name: 'Aluminum Foil',
-    quantity: 1,
-    category: 'Basic',
-    location: 'Kitchen',
-    icon: '🔲',
-  },
-  {
-    id: 'plasticBags',
-    name: 'Plastic Bags',
-    quantity: 10,
-    category: 'Basic',
-    location: 'Kitchen',
-    icon: '🛍️',
-  },
-  {
-    id: 'sunglasses',
-    name: 'Sunglasses',
-    quantity: 1,
-    category: 'Personal',
-    location: 'On Person',
-    icon: '🕶️',
-  },
-  {
-    id: 'lipBalm',
-    name: 'Lip Balm',
-    quantity: 1,
-    category: 'Personal',
-    location: 'On Person',
-    icon: '💄',
-  },
-  {
-    id: 'handSanitizer',
-    name: 'Hand Sanitizer',
-    quantity: 1,
-    category: 'Personal',
-    location: 'On Person',
-    icon: '🧼',
-  },
-  {
-    id: 'coffeeMaker',
-    name: 'French Press Coffee Maker',
-    quantity: 1,
-    category: 'Basic',
-    location: 'Kitchen',
-    icon: '☕',
-  },
-  {
-    id: 'sewingKit',
-    name: 'Sewing Kit',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '🧵',
-  },
-  {
-    id: 'safetyPins',
-    name: 'Safety Pins',
-    quantity: 10,
-    category: 'Tools',
-    location: 'House',
-    icon: '📌',
-  },
-  {
-    id: 'rubberBands',
-    name: 'Rubber Bands',
-    quantity: 20,
-    category: 'Tools',
-    location: 'House',
-    icon: '🔗',
-  },
-  {
-    id: 'pencilSharpener',
-    name: 'Pencil Sharpener',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Workplace',
-    icon: '✏️',
-  },
-  {
-    id: 'handMirror',
-    name: 'Hand Mirror',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🪞',
-  },
-  {
-    id: 'superglue',
-    name: 'Super Glue',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Garage',
-    icon: '💧',
-  },
-  {
-    id: 'bandana',
-    name: 'Bandana',
-    quantity: 2,
-    category: 'Personal',
-    location: 'On Person',
-    icon: '🏳️',
-  },
-  {
-    id: 'rubberGloves',
-    name: 'Rubber Gloves',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Kitchen',
-    icon: '🧤',
-  },
-  {
-    id: 'magnifyingGlass',
-    name: 'Magnifying Glass',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '🔍',
-  },
-  {
-    id: 'candle',
-    name: 'Scented Candle',
-    quantity: 1,
-    category: 'Basic',
-    location: 'House',
-    icon: '🕯️',
-  },
-  {
-    id: 'playingCards',
-    name: 'Deck of Playing Cards',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🃏',
-  },
-  {
-    id: 'notebook',
-    name: 'Notebook',
-    quantity: 1,
-    category: 'Basic',
-    location: 'Workplace',
-    icon: '📓',
-  },
-  {
-    id: 'dentalFloss',
-    name: 'Dental Floss',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🦷',
-  },
-  {
-    id: 'ziplockBags',
-    name: 'Ziplock Bags',
-    quantity: 20,
-    category: 'Basic',
-    location: 'Kitchen',
-    icon: '🏷️',
-  },
-  {
-    id: 'aluminumPot',
-    name: 'Small Aluminum Pot',
-    quantity: 1,
-    category: 'Basic',
-    location: 'Kitchen',
-    icon: '🍲',
-  },
-  {
-    id: 'handCrank',
-    name: 'Hand Crank Radio',
-    quantity: 1,
-    category: 'Tools',
-    location: 'House',
-    icon: '📻',
-  },
-  {
-    id: 'coffeeFilters',
-    name: 'Coffee Filters',
-    quantity: 100,
-    category: 'Basic',
-    location: 'Kitchen',
-    icon: '☕',
-  },
-  {
-    id: 'backpack',
-    name: 'Sturdy Backpack',
-    quantity: 1,
-    category: 'Basic',
-    location: 'House',
-    icon: '🎒',
-  },
-  {
-    id: 'trashBags',
-    name: 'Large Trash Bags',
-    quantity: 10,
-    category: 'Basic',
-    location: 'Garage',
-    icon: '🗑️',
-  },
-  {
-    id: 'bleach',
-    name: 'Bleach',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Garage',
-    icon: '🧪',
-  },
-  {
-    id: 'fishingLine',
-    name: 'Fishing Line',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Garage',
-    icon: '🎣',
-  },
-  {
-    id: 'wireHanger',
-    name: 'Wire Hangers',
-    quantity: 5,
-    category: 'Tools',
-    location: 'House',
-    icon: '👕',
-  },
-  {
-    id: 'paperclips',
-    name: 'Paperclips',
-    quantity: 20,
-    category: 'Tools',
-    location: 'Workplace',
-    icon: '📎',
-  },
-  {
-    id: 'vaseline',
-    name: 'Vaseline',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🧴',
-  },
-  {
-    id: 'handWarmers',
-    name: 'Hand Warmers',
-    quantity: 4,
-    category: 'Personal',
-    location: 'Car',
-    icon: '🧤🔥',
-  },
-  {
-    id: 'aloeVera',
-    name: 'Aloe Vera Gel',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🌿',
-  },
-  {
-    id: 'bungeeCordsSet',
-    name: 'Bungee Cords Set',
-    quantity: 1,
-    category: 'Tools',
-    location: 'Garage',
-    icon: '🪢',
-  },
-  {
-    id: 'bottleCaps',
-    name: 'Metal Bottle Caps',
-    quantity: 10,
-    category: 'Basic',
-    location: 'Kitchen',
-    icon: '🍾',
-  },
-  {
-    id: 'rubberDuck',
-    name: 'Rubber Duck',
-    quantity: 1,
-    category: 'Personal',
-    location: 'Bathroom',
-    icon: '🦆',
-  },
-  {
-    id: 'yoyo',
-    name: 'Yoyo',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🪀',
-  },
-  {
-    id: 'hairSpray',
-    name: 'Hair Spray',
-    quantity: 1,
-    category: 'Personal',
-    location: 'Bathroom',
-    icon: '💇‍♀️',
-  },
-  {
-    id: 'chopsticks',
-    name: 'Chopsticks',
-    quantity: 2,
-    category: 'Basic',
-    location: 'Kitchen',
-    icon: '🥢',
-  },
-  {
-    id: 'rubberBand',
-    name: 'Rubber Band Ball',
-    quantity: 1,
-    category: 'Basic',
-    location: 'Workplace',
-    icon: '🏐',
-  },
-  {
-    id: 'teaBags',
-    name: 'Assorted Tea Bags',
-    quantity: 10,
-    category: 'Basic',
-    location: 'Kitchen',
-    icon: '🍵',
-  },
-  {
-    id: 'marbles',
-    name: 'Bag of Marbles',
-    quantity: 20,
-    category: 'Personal',
-    location: 'House',
-    icon: '🔮',
-  },
-  {
-    id: 'chessSet',
-    name: 'Travel Chess Set',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '♟️',
-  },
-  {
-    id: 'kazoo',
-    name: 'Kazoo',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🎵',
-  },
-  {
-    id: 'rollerSkates',
-    name: 'Roller Skates',
-    quantity: 1,
-    category: 'Personal',
-    location: 'Garage',
-    icon: '🛼',
-  },
-  {
-    id: 'crayons',
-    name: 'Box of Crayons',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🖍️',
-  },
-  {
-    id: 'rubiksCube',
-    name: "Rubik's Cube",
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🧊',
-  },
-  {
-    id: 'pinata',
-    name: 'Piñata',
-    quantity: 1,
-    category: 'Personal',
-    location: 'Garage',
-    icon: '🪅',
-  },
-  {
-    id: 'bubbleSolution',
-    name: 'Bubble Solution',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🫧',
-  },
-  {
-    id: 'hula',
-    name: 'Hula Hoop',
-    quantity: 1,
-    category: 'Personal',
-    location: 'Garage',
-    icon: '🥳',
-  },
-  {
-    id: 'origamiPaper',
-    name: 'Origami Paper Set',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🎎',
-  },
-  {
-    id: 'slinky',
-    name: 'Slinky',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🌀',
-  },
-  {
-    id: 'temporaryTattoos',
-    name: 'Temporary Tattoos',
-    quantity: 10,
-    category: 'Personal',
-    location: 'House',
-    icon: '💉',
-  },
-  {
-    id: 'squeakyToy',
-    name: 'Dog Squeaky Toy',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🦴',
-  },
-  {
-    id: 'kaleidoscope',
-    name: 'Kaleidoscope',
-    quantity: 1,
-    category: 'Personal',
-    location: 'House',
-    icon: '🌈',
-  },
-]
-
-export const generateStartingInventory = (): Resource[] => {
-  const inventory: Resource[] = []
-  const itemCount = Math.floor(Math.random() * 5) + 3 // 3 to 7 items
-
-  for (let i = 0; i < itemCount; i++) {
-    const randomItem =
-      possibleStartingItems[
-        Math.floor(Math.random() * possibleStartingItems.length)
-      ]
-    const existingItem = inventory.find((item) => item.id === randomItem.id)
-
-    if (existingItem) {
-      existingItem.quantity += randomItem.quantity
-    } else {
-      inventory.push({ ...randomItem })
-    }
-  }
-
-  return inventory
-}
-export const actions: Action[] = [
+const actions: GameAction[] = [
   {
     id: 'buildFitness',
     name: 'Build Personal Fitness',
@@ -707,7 +11,7 @@ export const actions: Action[] = [
       'Improve your physical condition to better handle survival situations.',
     requirements: [],
     icon: '💪',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       const updatedResources = gameState.resources.map((resource) => {
         if (resource.id === 'health') {
           return {
@@ -726,6 +30,7 @@ export const actions: Action[] = [
     longTermEffect: 'Increased chance of surviving physical challenges',
     consequences: 'Temporary decrease in energy levels',
     isFree: false,
+    scoreIncrease: 10,
   },
   {
     id: 'weatherPrediction',
@@ -735,7 +40,7 @@ export const actions: Action[] = [
     description: 'Learn to forecast weather based on natural signs.',
     requirements: [],
     icon: '🌦️',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       const existingSkill = gameState.skills.find(
         (skill) => skill.id === 'weatherPrediction',
       )
@@ -773,6 +78,7 @@ export const actions: Action[] = [
     consequences:
       'Time spent learning could have been used for other preparations',
     isFree: false,
+    scoreIncrease: 10,
   },
   {
     id: 'improvisation',
@@ -783,7 +89,8 @@ export const actions: Action[] = [
       'Practice thinking on your feet and creating solutions with limited resources.',
     requirements: [],
     icon: '🎭',
-    immediateEffect: (gameState: OverallGameState) => {
+    scoreIncrease: 5,
+    immediateEffect: (gameState: GameState) => {
       const existingSkill = gameState.skills.find(
         (skill) => skill.id === 'improvisation',
       )
@@ -833,7 +140,8 @@ export const actions: Action[] = [
     description: 'Learn to craft and tell engaging stories.',
     requirements: [],
     icon: '📚',
-    immediateEffect: (gameState: OverallGameState) => {
+    scoreIncrease: 15,
+    immediateEffect: (gameState: GameState) => {
       const existingSkill = gameState.skills.find(
         (skill) => skill.id === 'storytelling',
       )
@@ -881,7 +189,8 @@ export const actions: Action[] = [
       'Learn essential first aid skills and acquire basic medical supplies.',
     requirements: [],
     icon: '🩺',
-    immediateEffect: (gameState: OverallGameState) => {
+    scoreIncrease: 15,
+    immediateEffect: (gameState: GameState) => {
       const updatedSkills = [
         ...gameState.skills,
         {
@@ -928,7 +237,8 @@ export const actions: Action[] = [
     description: 'Learn to create fabric items using yarn or thread.',
     requirements: [],
     icon: '🧶',
-    immediateEffect: (gameState: OverallGameState) => {
+    scoreIncrease: 10,
+    immediateEffect: (gameState: GameState) => {
       const existingSkill = gameState.skills.find(
         (skill) => skill.id === 'knitting',
       )
@@ -974,8 +284,9 @@ export const actions: Action[] = [
     duration: 90,
     description: 'Learn about celestial bodies and their movements.',
     requirements: [],
+    scoreIncrease: 5,
     icon: '🌟',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       const existingSkill = gameState.skills.find(
         (skill) => skill.id === 'astronomy',
       )
@@ -1021,8 +332,9 @@ export const actions: Action[] = [
     duration: 30,
     description: 'Learn to produce clear, loud whistles.',
     requirements: [],
+    scoreIncrease: 7,
     icon: '😗',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       const existingSkill = gameState.skills.find(
         (skill) => skill.id === 'whistling',
       )
@@ -1066,10 +378,11 @@ export const actions: Action[] = [
     name: 'Practice Bird Calling',
     category: 'Skill Development',
     duration: 45,
+    scoreIncrease: 10,
     description: 'Learn to mimic various bird calls and songs.',
     requirements: [],
     icon: '🐦',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       const existingSkill = gameState.skills.find(
         (skill) => skill.id === 'birdCalling',
       )
@@ -1112,11 +425,12 @@ export const actions: Action[] = [
     id: 'learnKnotTying',
     name: 'Learn Knot Tying',
     category: 'Skill Development',
+    scoreIncrease: 15,
     duration: 60,
     description: 'Learn to tie various useful knots.',
     requirements: ['survival101'],
     icon: '🪢',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       const existingSkillIndex = gameState.skills.findIndex(
         (skill) => skill.id === 'knotTying',
       )
@@ -1165,12 +479,13 @@ export const actions: Action[] = [
     id: 'learn_foraging',
     name: 'Learn Foraging',
     category: 'Skill Development',
+    scoreIncrease: 15,
     duration: 60,
     description:
       'Study local edible plants and fungi to improve foraging skills.',
     requirements: ['survival101'],
     icon: '🍄',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       const existingSkill = gameState.skills.find(
         (skill) => skill.id === 'foraging',
       )
@@ -1216,12 +531,13 @@ export const actions: Action[] = [
   {
     id: 'meditation',
     name: 'Practice Meditation',
+    scoreIncrease: 12,
     category: 'Skill Development',
     duration: 30,
     description: 'Practice mindfulness and mental focus. Be present.',
     requirements: [],
     icon: '🧘',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       const existingSkill = gameState.skills.find(
         (skill) => skill.id === 'meditation',
       )
@@ -1268,11 +584,12 @@ export const actions: Action[] = [
     id: 'stockupFood',
     name: 'Stock Up on Non-Perishable Food',
     category: 'Resource Gathering',
+    scoreIncrease: 8,
     duration: 45,
     description: 'Purchase and store a variety of long-lasting food items.',
     requirements: [],
     icon: '🥫',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       const updatedResources = gameState.resources.map((resource) => {
         if (resource.id === 'food') {
           return { ...resource, quantity: resource.quantity + 10 }
@@ -1307,7 +624,8 @@ export const actions: Action[] = [
     description: 'Study various methods to make water safe for consumption.',
     requirements: [],
     icon: '💧',
-    immediateEffect: (gameState: OverallGameState) => {
+    scoreIncrease: 10,
+    immediateEffect: (gameState: GameState) => {
       const updatedSkills = [
         ...gameState.skills,
         {
@@ -1342,7 +660,8 @@ export const actions: Action[] = [
       'Establish connections with neighbors and local community members.',
     requirements: [],
     icon: '🤝',
-    immediateEffect: (gameState: OverallGameState) => {
+    scoreIncrease: 15,
+    immediateEffect: (gameState: GameState) => {
       const updatedResources = [
         ...gameState.resources,
         {
@@ -1369,10 +688,11 @@ export const actions: Action[] = [
     name: 'Inventory Check',
     category: 'Free Actions',
     duration: 0,
+    scoreIncrease: 5,
     description: 'Thoroughly check your inventory for overlooked items.',
     requirements: [],
     icon: '📋',
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       if (Math.random() < 0.2) {
         const newItem = generateRandomItem()
         return {
@@ -1398,7 +718,8 @@ export const actions: Action[] = [
     description: 'Take a moment to plan your survival strategy.',
     requirements: [],
     icon: '🧠',
-    immediateEffect: (gameState: OverallGameState) => {
+    scoreIncrease: 10,
+    immediateEffect: (gameState: GameState) => {
       if (gameState.skills.length > 0) {
         const randomSkill =
           gameState.skills[Math.floor(Math.random() * gameState.skills.length)]
@@ -1427,11 +748,12 @@ export const actions: Action[] = [
     name: 'Check Supplies',
     category: 'Free Actions',
     duration: 0,
+    scoreIncrease: 5,
     description: 'Double-check your inventory for any overlooked items.',
     icon: '🔍',
     isFree: true,
     requirements: [],
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       // 10% chance to find a random item
       if (Math.random() < 0.1) {
         const newItem = generateRandomItem()
@@ -1449,12 +771,13 @@ export const actions: Action[] = [
     id: 'organizeGear',
     name: 'Organize Gear',
     category: 'Free Actions',
+    scoreIncrease: 5,
     duration: 0,
     description: 'Organize your gear for better efficiency.',
     icon: '🎒',
     isFree: true,
     requirements: [],
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       return {
         ...gameState,
         preparednessScore: gameState.preparednessScore + 2,
@@ -1467,12 +790,13 @@ export const actions: Action[] = [
     id: 'mentalPrep',
     name: 'Mental Preparation',
     category: 'Free Actions',
+    scoreIncrease: 10,
     duration: 0,
     description: 'Take a moment to mentally prepare for challenges ahead.',
     icon: '🧠',
     isFree: true,
     requirements: [],
-    immediateEffect: (gameState: OverallGameState) => {
+    immediateEffect: (gameState: GameState) => {
       return {
         ...gameState,
         preparednessScore: gameState.preparednessScore + 1,
@@ -1483,116 +807,4 @@ export const actions: Action[] = [
   },
 ]
 
-export const events: Event[] = [
-  {
-    id: 'localSale',
-    name: 'Sale at Local Store',
-    description:
-      "There's a sale at the local store. You can get extra supplies at a discount.",
-    icon: '🧵',
-    choices: [
-      {
-        text: 'Stock up on canned goods',
-        effect: (gameState: OverallGameState) => {
-          const updatedResources = gameState.resources.map((resource) => {
-            if (resource.id === 'food') {
-              return { ...resource, quantity: resource.quantity + 5 }
-            }
-            return resource
-          })
-          if (!updatedResources.find((r) => r.id === 'food')) {
-            updatedResources.push({
-              id: 'food',
-              name: 'Canned Food',
-              quantity: 5,
-              category: 'Basic' as ResourceCategory,
-              location: 'House',
-              icon: '🏪',
-            })
-          }
-          return {
-            ...gameState,
-            resources: updatedResources,
-            preparednessScore: gameState.preparednessScore + 10,
-          }
-        },
-      },
-      {
-        text: 'Ignore the sale and continue your preparations',
-        effect: (gameState: OverallGameState) => gameState,
-      },
-    ],
-  },
-  // Add more events here as needed
-]
-
-export function generateRandomItem(): Resource {
-  const possibleItems: Resource[] = [
-    {
-      id: 'flashlight',
-      name: 'Flashlight',
-      quantity: 1,
-      category: 'Tools' as ResourceCategory,
-      location: 'House',
-      icon: '🔦',
-    },
-    {
-      id: 'batteries',
-      name: 'Batteries',
-      quantity: 1,
-      category: 'Tools' as ResourceCategory,
-      location: 'House',
-      icon: '🔋',
-    },
-    {
-      id: 'firstAidKit',
-      name: 'First Aid Kit',
-      quantity: 1,
-      category: 'Basic' as ResourceCategory,
-      location: 'House',
-      icon: '🩹',
-    },
-    {
-      id: 'canFood',
-      name: 'Canned Food',
-      quantity: 1,
-      category: 'Basic' as ResourceCategory,
-      location: 'House',
-      icon: '🥫',
-    },
-    {
-      id: 'ropeLength',
-      name: 'Length of Rope',
-      quantity: 1,
-      category: 'Tools' as ResourceCategory,
-      location: 'House',
-      icon: '🧵',
-    },
-  ]
-  return possibleItems[Math.floor(Math.random() * possibleItems.length)]
-}
-
-export const initialSkills: Skill[] = [
-  {
-    id: 'survival101',
-    name: 'Basic Life Skills',
-    level: 1,
-    icon: '🏕️',
-    description:
-      'The fundamentals of living life, like how to fall asleep and how to keep yourself warm.',
-    requirements: [],
-    effects: ['Increase survival chance by 5%'],
-    maxLevel: 5,
-  },
-  {
-    id: 'firemaking',
-    name: 'Fire Making',
-    level: 1,
-    icon: '🔥',
-    description: 'How to make fire in various conditions.',
-    requirements: ['survival101'],
-    effects: ['Can create fire for warmth and cooking'],
-    maxLevel: 5,
-  },
-  // Add more skills as needed
-]
+export { actions }

@@ -1,0 +1,19 @@
+/* eventHandler.css */
+.event-handler {
+  background-color: var(--color-warning);
+  color: var(--color-dark);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.event-handler h3 {
+  color: var(--color-dark);
+  margin-bottom: 10px;
+}
+
+.event-handler button {
+  background-color: var(--color-dark);
+  color: var(--color-light);
+  margin-top: 10px;
+}

@@ -1,5 +1,5 @@
 import db from './connection.ts'
-import { Fruit, FruitData } from '../../models/types.ts'
+import { Fruit, FruitData } from '../../client/types/types.ts'
 
 export async function getAllFruits() {
   const fruit = await db('fruit').select()

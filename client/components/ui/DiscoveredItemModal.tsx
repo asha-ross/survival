@@ -1,9 +1,10 @@
+// src/components/ui/DiscoveredItemModal.tsx
 import React from 'react'
-import { Resource } from '../../models/types'
+import { Resource } from '../../types/types'
 
 interface DiscoveredItemModalProps {
   item: Resource
-  onKeep: () => void
+  onKeep: (item: Resource) => void // Updated to accept a Resource
   onDiscard: () => void
   isProcessing: boolean
 }
@@ -25,11 +26,11 @@ const DiscoveredItemModal: React.FC<DiscoveredItemModalProps> = ({
         </div>
         <p>Would you like to keep this item?</p>
         <div className="modal-actions">
-          <button onClick={onKeep} disabled={isProcessing}>
+          <button onClick={() => onKeep(item)} disabled={isProcessing}>
             {isProcessing ? 'Processing' : 'Keep Item'}
           </button>
           <button onClick={onDiscard} disabled={isProcessing}>
-            {isProcessing ? 'Discard Item' : 'Discard Item'}
+            Discard Item
           </button>
         </div>
       </div>

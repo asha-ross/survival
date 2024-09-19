@@ -1,0 +1,28 @@
+/* preparationPhase.css */
+.preparation-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.game-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--color-dark);
+  padding: 10px 20px;
+  border-radius: var(--border-radius);
+}
+
+.timer,
+.preparedness-score {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.story-step {
+  background-color: var(--color-secondary);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+}

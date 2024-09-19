@@ -1,0 +1,26 @@
+/* actionSelection.css */
+.action-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.action-item {
+  background-color: var(--color-secondary);
+  padding: 15px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.action-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.action-icon {
+  font-size: 1.5rem;
+  margin-right: 10px;
+}

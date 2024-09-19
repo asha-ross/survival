@@ -3,7 +3,7 @@ import {
   OverallGameState,
   SurvivalScenario as DisasterScenario,
   Choice,
-} from '../../models/types'
+} from '../../types/types'
 import { startDisaster } from '../utilities/survivalData'
 
 interface DisasterPhaseProps {

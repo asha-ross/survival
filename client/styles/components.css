@@ -1,0 +1,26 @@
+/* components.css */
+.card {
+  background-color: var(--color-secondary);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: var(--box-shadow);
+}
+
+.button {
+  background-color: var(--color-accent);
+  color: var(--color-light);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: var(--color-warning);
+}
+
+.button:disabled {
+  background-color: var(--color-secondary);
+  cursor: not-allowed;
+}
