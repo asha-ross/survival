@@ -2,7 +2,6 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { GameContext } from '../../context/GameContext'
 import { usePreparationPhase } from '../../hooks/usePreparationPhase'
-import { StatusBar } from '../ui/StatusBar'
 import ResourceDisplay from '../ui/ResourceDisplay'
 import SkillTree from '../ui/SkillTree'
 import ActionSelection from '../ui/ActionSelection'
@@ -11,13 +10,14 @@ import SkillTrainingModal from '../ui/SkillTrainingModal'
 import { storySteps } from '../../data/storyData'
 import { actions } from '../../data/actionData'
 import { GameAction, Skill, Resource } from '../../types/types'
+import { checkRequirements } from '../../utilities/gameLogic'
+import SkillFeedback from '../ui/SkillFeedback'
 
 const PreparationPhase: React.FC = () => {
   const { gameState, dispatch } = useContext(GameContext)!
   const {
     timeRemaining,
     isRunning,
-    startTimer,
     stopTimer,
     makeChoice,
     performAction,
@@ -25,6 +25,53 @@ const PreparationPhase: React.FC = () => {
   } = usePreparationPhase()
 
   const [isTrainingSkills, setIsTrainingSkills] = useState(false)
+  const [availableActions, setAvailableActions] = useState<GameAction[]>([])
+
+  const [skillFeedback, setSkillFeedback] = useState<{
+    skillName: string
+    newLevel: number
+  } | null>(null)
+
+  useEffect(() => {
+    const filteredActions = actions.filter((action) => {
+      // Check if the action is free or if the player has enough time
+      const hasEnoughTime =
+        action.isFree || gameState.timeRemaining >= action.duration
+
+      // Check if the player meets the skill requirements
+      const meetsSkillRequirements = checkRequirements(
+        action.requirements,
+        gameState.skills,
+      )
+
+      // Check if the player has the necessary resources
+      const hasRequiredResources = action.requirements.every((req) => {
+        const resource = gameState.resources.find((r) => r.id === req)
+        return resource && resource.quantity > 0
+      })
+
+      // Check if the action is appropriate for the current location
+      const isAppropriateForLocation =
+        action.category === 'Free Actions' ||
+        action.category === gameState.currentLocation
+
+      // Check if the action hasn't reached its maximum level (for skill-based actions)
+      const canLevelUp =
+        !action.maxLevel ||
+        (gameState.skills.find((s) => s.id === action.id)?.level || 0) <
+          action.maxLevel
+
+      return (
+        hasEnoughTime &&
+        meetsSkillRequirements &&
+        hasRequiredResources &&
+        isAppropriateForLocation &&
+        canLevelUp
+      )
+    })
+
+    setAvailableActions(filteredActions)
+  }, [gameState])
 
   useEffect(() => {
     if (isRunning) {
@@ -82,19 +129,22 @@ const PreparationPhase: React.FC = () => {
           }
 
           if (choice.effects.skills) {
-            choice.effects.skills.forEach((skillEffect: Partial<Skill>) => {
+            choice.effects.skills.forEach((skillEffect) => {
               if (skillEffect.id) {
                 const existingSkill = gameState.skills.find(
                   (s) => s.id === skillEffect.id,
                 )
                 if (existingSkill) {
+                  const newLevel =
+                    existingSkill.level + (skillEffect.level || 1)
                   dispatch({
                     type: 'UPDATE_SKILL',
                     payload: {
                       id: skillEffect.id,
-                      level: existingSkill.level + (skillEffect.level || 1),
+                      level: newLevel,
                     },
                   })
+                  setSkillFeedback({ skillName: existingSkill.name, newLevel })
                 } else if (
                   skillEffect.name &&
                   skillEffect.icon &&
@@ -109,6 +159,10 @@ const PreparationPhase: React.FC = () => {
                       effects: skillEffect.effects || [],
                       maxLevel: skillEffect.maxLevel || 5,
                     } as Skill,
+                  })
+                  setSkillFeedback({
+                    skillName: skillEffect.name,
+                    newLevel: skillEffect.level || 1,
                   })
                 }
               }
@@ -150,6 +204,10 @@ const PreparationPhase: React.FC = () => {
 
   const handleActionSelect = (action: GameAction) => {
     performAction(action)
+    dispatch({ type: 'SET_CURRENT_ACTION', payload: action })
+    setTimeout(() => {
+      dispatch({ type: 'CLEAR_CURRENT_ACTION' })
+    }, action.duration * 1000)
   }
 
   const getAvailableSkills = (): Skill[] => {
@@ -158,37 +216,48 @@ const PreparationPhase: React.FC = () => {
 
   return (
     <div className="preparation-phase">
-      <StatusBar
-        timeRemaining={timeRemaining}
-        score={gameState.preparednessScore}
-      />
-      <div className="main-content">
-        {!isTrainingSkills ? (
-          <StoryCard
-            currentStep={storySteps[gameState.storyStep]}
-            onChoice={handleStoryChoice}
+      <header className="game-header">
+        <h1>Survival</h1>
+      </header>
+      <div className="game-content">
+        <div className="left-panel">
+          <ResourceDisplay resources={gameState.resources} />
+          <SkillTree skills={gameState.skills} />
+          {skillFeedback && (
+            <SkillFeedback
+              skillName={skillFeedback.skillName}
+              newLevel={skillFeedback.newLevel}
+            />
+          )}
+        </div>
+        <div className="center-panel">
+          {!isTrainingSkills ? (
+            <StoryCard
+              currentStep={storySteps[gameState.storyStep]}
+              onChoice={handleStoryChoice}
+              skills={gameState.skills}
+            />
+          ) : (
+            <SkillTrainingModal
+              availableSkills={getAvailableSkills()}
+              onSelectSkill={handleSkillTraining}
+              onCancel={() => setIsTrainingSkills(false)}
+            />
+          )}
+        </div>
+        <div className="right-panel">
+          <ActionSelection
+            actions={availableActions}
+            onActionSelect={handleActionSelect}
+            disabled={!isRunning || !!gameState.currentAction}
           />
-        ) : (
-          <SkillTrainingModal
-            availableSkills={getAvailableSkills()}
-            onSelectSkill={handleSkillTraining}
-            onCancel={() => setIsTrainingSkills(false)}
-          />
-        )}
-        <ResourceDisplay resources={gameState.resources} />
-        <SkillTree skills={gameState.skills} />
-        <ActionSelection
-          actions={actions}
-          onActionSelect={handleActionSelect}
-          disabled={!isRunning || !!gameState.currentAction}
-        />
+        </div>
       </div>
-      {!isRunning && (
-        <button onClick={startTimer}>Start Preparation Phase</button>
-      )}
-      {isRunning && (
-        <button onClick={stopTimer}>Pause Preparation Phase</button>
-      )}
+      <footer className="game-footer">
+        {isRunning && (
+          <button onClick={stopTimer}>Pause Preparation Phase</button>
+        )}
+      </footer>
     </div>
   )
 }

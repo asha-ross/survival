@@ -21,7 +21,7 @@ const App: React.FC = () => {
             </button>
           </div>
         ) : (
-          <GameContainer />
+          <GameContainer justWokeUp={true} />
         )}
       </div>
     </ErrorBoundary>

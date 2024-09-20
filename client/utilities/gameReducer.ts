@@ -98,7 +98,13 @@ export const gameReducer = (
         ...state,
         skills: state.skills.map((skill) =>
           skill.id === action.payload.id
-            ? { ...skill, level: action.payload.level }
+            ? {
+                ...skill,
+                level: Math.min(
+                  skill.level + action.payload.level,
+                  skill.maxLevel,
+                ),
+              }
             : skill,
         ),
       }
@@ -148,6 +154,17 @@ export const gameReducer = (
       return {
         ...state,
         preparednessScore: action.payload,
+      }
+    case 'SET_CURRENT_ACTION':
+      return {
+        ...state,
+        currentAction: action.payload,
+      }
+
+    case 'CLEAR_CURRENT_ACTION':
+      return {
+        ...state,
+        currentAction: null,
       }
     default:
       return state

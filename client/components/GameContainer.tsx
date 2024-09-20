@@ -1,18 +1,18 @@
 // src/components/GameContainer.tsx
-import React, { useContext, useEffect } from 'react'
+import React, { useCallback, useContext, useEffect } from 'react'
 import { GameContext } from '../context/GameContext'
 import { usePreparationPhase } from '../hooks/usePreparationPhase'
 import { StatusBar } from './ui/StatusBar'
-import ResourceDisplay from './ui/ResourceDisplay'
-import SkillTree from './ui/SkillTree'
-// import ActionSelection from './ui/ActionSelection'
 import EventHandler from './ui/EventHandler'
-// import { actions } from '../data/actionData'
 import { storySteps } from '../data/storyData'
-import { Resource, Skill } from '../types/types'
-import { StoryCard } from './ui/StoryCard'
+import { Resource } from '../types/types'
+import PreparationPhase from './phases/PreparationPhase'
 
-const GameContainer: React.FC = () => {
+interface GameContainerProps {
+  justWokeUp: boolean
+}
+
+const GameContainer: React.FC<GameContainerProps> = ({ justWokeUp }) => {
   const { gameState, dispatch } = useContext(GameContext)!
   const {
     timeRemaining,
@@ -20,10 +20,19 @@ const GameContainer: React.FC = () => {
     startTimer,
     stopTimer,
     resetTimer,
-    // makeChoice,
-    // performAction,
     triggerDisaster,
   } = usePreparationPhase()
+
+  const handleStartPreparationPhase = useCallback(() => {
+    startTimer()
+    dispatch({ type: 'START_PREPARATION_PHASE' })
+  }, [startTimer, dispatch])
+
+  useEffect(() => {
+    if (justWokeUp) {
+      handleStartPreparationPhase()
+    }
+  }, [justWokeUp, handleStartPreparationPhase])
 
   useEffect(() => {
     // Update the game state with the current time remaining
@@ -37,10 +46,6 @@ const GameContainer: React.FC = () => {
       return () => clearTimeout(disasterTimer)
     }
   }, [isRunning, triggerDisaster])
-
-  // const handleActionSelect = (action: GameAction) => {
-  //   performAction(action)
-  // }
 
   const handleStoryChoice = (choiceId: string) => {
     const currentStep = storySteps[gameState.storyStep]
@@ -79,39 +84,6 @@ const GameContainer: React.FC = () => {
           }
         })
       }
-      if (choice.effects.skills) {
-        choice.effects.skills.forEach((skillEffect) => {
-          if (skillEffect.id) {
-            const existingSkill = gameState.skills.find(
-              (s) => s.id === skillEffect.id,
-            )
-            if (existingSkill) {
-              dispatch({
-                type: 'UPDATE_SKILL',
-                payload: {
-                  id: skillEffect.id,
-                  level: existingSkill.level + (skillEffect.level || 1),
-                },
-              })
-            } else if (
-              skillEffect.name &&
-              skillEffect.icon &&
-              skillEffect.description
-            ) {
-              dispatch({
-                type: 'ADD_SKILL',
-                payload: {
-                  ...skillEffect,
-                  level: skillEffect.level || 1,
-                  requirements: skillEffect.requirements || [],
-                  effects: skillEffect.effects || [],
-                  maxLevel: skillEffect.maxLevel || 5,
-                } as Skill,
-              })
-            }
-          }
-        })
-      }
     }
 
     if (gameState.storyStep < storySteps.length - 1) {
@@ -121,34 +93,13 @@ const GameContainer: React.FC = () => {
     }
   }
 
-  const handleStartPreparationPhase = () => {
-    startTimer()
-    dispatch({ type: 'START_PREPARATION_PHASE' })
-  }
-
   const renderPhaseContent = () => {
     switch (gameState.phase) {
       case 'PREPARATION':
-        return (
-          <>
-            <StoryCard
-              currentStep={storySteps[gameState.storyStep]}
-              onChoice={handleStoryChoice}
-            />
-            <ResourceDisplay resources={gameState.resources} />
-            <SkillTree skills={gameState.skills} />
-            {/* <ActionSelection
-              actions={actions}
-              onActionSelect={handleActionSelect}
-              disabled={!isRunning || !!gameState.currentAction}
-            /> */}
-          </>
-        )
+        return <PreparationPhase />
       case 'DISASTER':
-        // Render disaster phase content
         return <div>Disaster Phase Content</div>
       case 'SURVIVAL':
-        // Render survival phase content
         return <div>Survival Phase Content</div>
       default:
         return null
@@ -156,29 +107,24 @@ const GameContainer: React.FC = () => {
   }
 
   return (
-    <div className="game-container">
+    <div>
       <StatusBar
         timeRemaining={timeRemaining}
         score={gameState.preparednessScore}
       />
-      <div className="main-content">
-        {renderPhaseContent()}
-        {gameState.currentEvent && (
-          <EventHandler
-            event={gameState.currentEvent}
-            onChoice={handleStoryChoice}
-          />
-        )}
-      </div>
+      {renderPhaseContent()}
+      {gameState.currentEvent && (
+        <EventHandler
+          event={gameState.currentEvent}
+          onChoice={handleStoryChoice}
+        />
+      )}
 
       <div className="game-controls">
-        {gameState.phase === 'PREPARATION' && !isRunning && (
-          <button onClick={handleStartPreparationPhase}>
-            Start Preparation Phase
-          </button>
-        )}
-        {isRunning && (
-          <button onClick={stopTimer}>Pause Preparation Phase</button>
+        {isRunning ? (
+          <button onClick={stopTimer}>Pause</button>
+        ) : (
+          <button onClick={startTimer}>Resume</button>
         )}
         <button onClick={() => resetTimer(300)}>Reset Timer (5 minutes)</button>
       </div>

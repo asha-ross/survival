@@ -1,16 +1,36 @@
 // src/context/GameContext.tsx
 import React, { createContext, useReducer, ReactNode } from 'react'
-import { GameActionUnion } from '../types/types'
+import { GameActionUnion, GameState, Character, Resource } from '../types/types'
 import { gameReducer } from '../utilities/gameReducer'
-import { initialSkills } from '../data/skillData'
+import { initialSkills, learnableSkills } from '../data/skillData'
+import { initialResources, possibleStartingItems } from '../data/gameData'
 
-import { GameState, Character } from '../types/types'
+const generateStartingInventory = (): Resource[] => {
+  const inventory: Resource[] = [...initialResources]
+  const itemCount = Math.floor(Math.random() * 3) + 2 // 2 to 4 additional items
+
+  for (let i = 0; i < itemCount; i++) {
+    const randomItem =
+      possibleStartingItems[
+        Math.floor(Math.random() * possibleStartingItems.length)
+      ]
+    const existingItem = inventory.find((item) => item.id === randomItem.id)
+
+    if (existingItem) {
+      existingItem.quantity += randomItem.quantity
+    } else {
+      inventory.push({ ...randomItem })
+    }
+  }
+
+  return inventory
+}
 
 const initialCharacter: Character = {
   skills: {
-    survival: 1,
-    firstAid: 1,
-    navigation: 1,
+    awareness: 1,
+    fitness: 1,
+    communication: 1,
     // Add more initial skills as needed
   },
   supplies: {
@@ -25,8 +45,11 @@ const initialCharacter: Character = {
 const initialGameState: GameState = {
   phase: 'PREPARATION',
   storyStep: 0,
-  resources: [],
-  skills: initialSkills,
+  resources: generateStartingInventory(),
+  skills: [
+    ...initialSkills,
+    ...learnableSkills.map((skill) => ({ ...skill, level: 0 })),
+  ],
   preparednessScore: 0,
   timeRemaining: 300, // 5 minutes in seconds
   currentAction: null,

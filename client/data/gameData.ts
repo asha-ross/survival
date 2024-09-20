@@ -27,17 +27,9 @@ export const initialResources: Resource[] = [
     location: 'House',
     icon: '🩹',
   },
-  {
-    id: 'health',
-    name: 'Health',
-    quantity: 100,
-    category: 'Personal',
-    location: 'On Person',
-    icon: '❤️',
-  },
 ]
 
-const possibleStartingItems: Resource[] = [
+export const possibleStartingItems: Resource[] = [
   {
     id: 'flashlight',
     name: 'Flashlight',

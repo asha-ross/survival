@@ -12,49 +12,43 @@ const ResourceDisplay: React.FC<ResourceDisplayProps> = ({ resources }) => {
   const [selectedLocation, setSelectedLocation] = useState<string | 'All'>(
     'All',
   )
+  const [selectedCategory, setSelectedCategory] = useState<string>('All')
 
-  const locations = useMemo(
-    () => ['All', ...new Set(resources.map((r) => r.location))],
-    [resources],
-  )
+  const locations = useMemo(() => {
+    const allLocations = resources.map((r) => r.location)
+    return ['All', ...new Set(allLocations)]
+  }, [resources])
 
-  const filteredResources = useMemo(
-    () =>
-      selectedLocation === 'All'
-        ? resources
-        : resources.filter((r) => r.location === selectedLocation),
-    [resources, selectedLocation],
-  )
+  const categories = useMemo(() => {
+    const allCategories = resources.map((r) => r.category)
+    return ['All', ...new Set(allCategories)]
+  }, [resources])
 
-  const renderResourceItem = (resource: Resource, index: number) => (
-    <div key={`${resource.id}-${index}`} className="resource-item">
+  const filteredResources = useMemo(() => {
+    return resources.filter(
+      (r) =>
+        (selectedLocation === 'All' || r.location === selectedLocation) &&
+        (selectedCategory === 'All' || r.category === selectedCategory),
+    )
+  }, [resources, selectedLocation, selectedCategory])
+
+  const renderResourceItem = (resource: Resource) => (
+    <div key={resource.id} className="resource-item">
       <div className="resource-icon">{resource.icon}</div>
       <div className="resource-name">{resource.name}</div>
       <div className="resource-quantity">x{resource.quantity}</div>
     </div>
   )
 
-  const renderGridView = () => (
-    <div className="resource-grid">
-      {filteredResources.map(renderResourceItem)}
-    </div>
-  )
-
-  const renderListView = () => (
-    <div className="resource-list">
-      {filteredResources.map(renderResourceItem)}
-    </div>
-  )
-
   return (
     <div className="resource-display">
-      <div className="resources">
-        <h3>Resources</h3>
-        <div>
+      <div className="resources-header">
+        <h3>Inventory</h3>
+        <div className="view-controls">
           <select
             value={selectedLocation}
             onChange={(e) => setSelectedLocation(e.target.value)}
-            className="mr-2 rounded border p-1"
+            className="location-select"
           >
             {locations.map((loc) => (
               <option key={loc} value={loc}>
@@ -62,21 +56,34 @@ const ResourceDisplay: React.FC<ResourceDisplayProps> = ({ resources }) => {
               </option>
             ))}
           </select>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="category-select"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
           <button
-            className={`view-toggle-button ${viewType === 'grid' ? 'active' : 'inactive'}`}
+            className={`view-toggle-button ${viewType === 'grid' ? 'active' : ''}`}
             onClick={() => setViewType('grid')}
           >
             Grid
           </button>
           <button
-            className={`view-toggle-button ${viewType === 'list' ? 'active' : 'inactive'}`}
+            className={`view-toggle-button ${viewType === 'list' ? 'active' : ''}`}
             onClick={() => setViewType('list')}
           >
             List
           </button>
         </div>
       </div>
-      {viewType === 'grid' ? renderGridView() : renderListView()}
+      <div className={`resources-content ${viewType}`}>
+        {filteredResources.map(renderResourceItem)}
+      </div>
     </div>
   )
 }

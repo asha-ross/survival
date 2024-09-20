@@ -52,6 +52,7 @@ export interface GameAction {
   isFree: boolean
   icon: string
   scoreIncrease: number
+  maxLevel?: number
 }
 
 // Event types
@@ -169,6 +170,8 @@ export type GameActionUnion =
   | { type: 'START_PREPARATION_PHASE' }
   | { type: 'UPDATE_PREPAREDNESS_SCORE'; payload: number }
   | { type: 'NEXT_STORY_STEP' }
+  | { type: 'SET_CURRENT_ACTION'; payload: GameAction }
+  | { type: 'CLEAR_CURRENT_ACTION' }
   | {
       type: 'INITIALIZE_GAME'
       payload: { resources: Resource[]; skills: Skill[] }
