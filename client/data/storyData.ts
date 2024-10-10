@@ -5,7 +5,7 @@ import { skillMapping } from './skillMapping'
 export const storySteps: StoryStep[] = [
   {
     description:
-      "You wake to sunlight creeping around the edge of your curtains, and a heavy sense of relief settles around you. You don't have work today. And the day, you can tell by the brightness of the light, is going to be beautiful. You get up, make coffee, and think about what you'll do first:",
+      "You wake to sunlight creeping around the edge of your curtains, and a comfortable feeling of relief settles around you. You don't have work today. And the day, you can tell by the brightness of the light, is going to be beautiful. You get up, make coffee, and think about what you'll do first:",
     choices: [
       {
         id: 'check_news',
@@ -42,82 +42,53 @@ export const storySteps: StoryStep[] = [
     ],
   },
   {
-    description: 'You have some free time. What would you like to do?',
-    choices: [
-      {
-        id: 'study_weather',
-        text: 'Lie on your porch and stare at the clouds.',
-        effects: {
-          skills: [{ id: skillMapping.weatherPrediction, level: 1 }],
-        },
-      },
-      {
-        id: 'practice_storytelling',
-        text: 'Call a friend and rant about your anxieties, but subtly.',
-        effects: {
-          skills: [{ id: skillMapping.storytelling, level: 1 }],
-        },
-      },
-      {
-        id: 'learn_knots',
-        text: 'Untangle all your wire hangers in the closet.',
-        effects: {
-          skills: [{ id: skillMapping.knotTying, level: 1 }],
-        },
-      },
-    ],
-  },
-  {
     description:
-      "As you go about your day, you start to feel a bit uneasy. The weather report mentions a storm system approaching. What's your next move?",
+      'You have this uneasy feeling about the fragility of life. This leads you to:',
     choices: [
       {
         id: 'stock_up',
-        text: 'Go to the store to stock up on supplies',
+        text: 'Go to the store to stock up on supplies... just in case.',
         effects: {
           resources: [
-            { id: 'water', quantity: 5 },
+            { id: 'water', quantity: 3 },
             { id: 'food', quantity: 3 },
+            { id: 'batteries', quantity: 4 },
           ],
         },
       },
       {
         id: 'secure_home',
-        text: 'Secure your home against potential high winds',
+        text: 'See if there are any home repairs that desperately need to happen. You know... just in case.',
         effects: {
-          skills: [{ id: 'handyman', level: 1 }],
+          skills: [{ id: 'repairs', level: 1 }],
           resources: [{ id: 'tarp', quantity: 1 }],
         },
       },
       {
         id: 'inform_neighbors',
-        text: 'Inform your neighbors about the incoming storm',
+        text: 'Wander around the neighbour, talking to people you see.',
         effects: {
-          skills: [{ id: 'leadership', level: 1 }],
+          skills: [{ id: 'communication', level: 1 }],
         },
       },
     ],
   },
   {
     description:
-      'The storm is getting closer, and local authorities have issued a severe weather warning. You have a little time left before it hits. What do you prioritize?',
+      'You have a moment of calm now, and you feel a bit more relaxed. You:',
     choices: [
       {
-        id: 'emergency_kit',
-        text: 'Prepare an emergency kit',
+        id: 'meditate',
+        text: 'Sit quietly and try to think of nothing. Life is a strange and wonderful thing, and you will not try to control everything.',
         effects: {
-          resources: [
-            { id: 'flashlight', quantity: 1 },
-            { id: 'batteries', quantity: 4 },
-            { id: 'radio', quantity: 1 },
-          ],
+          skills: [{ id: 'meditation', level: 1 }],
         },
       },
       {
         id: 'evacuation_plan',
-        text: 'Plan potential evacuation routes',
+        text: 'Play a video game, where you have to escape a rampant zombie infestation. The vibrant graphics and intense gameplay bring you a sense of peace, but in the back of your mind, you are taking notes.',
         effects: {
-          skills: [{ id: 'navigation', level: 1 }],
+          skills: [{ id: 'awareness', level: 1 }],
           resources: [{ id: 'map', quantity: 1 }],
         },
       },
@@ -154,6 +125,32 @@ export const storySteps: StoryStep[] = [
         text: 'Try to call for help',
         effects: {
           skills: [{ id: 'communication', level: 1 }],
+        },
+      },
+    ],
+  },
+  {
+    description: 'You have some free time. What would you like to do?',
+    choices: [
+      {
+        id: 'study_weather',
+        text: 'Lie on your porch and stare at the clouds.',
+        effects: {
+          skills: [{ id: skillMapping.weatherPrediction, level: 1 }],
+        },
+      },
+      {
+        id: 'practice_storytelling',
+        text: 'Call a friend and rant about your anxieties, but subtly.',
+        effects: {
+          skills: [{ id: skillMapping.storytelling, level: 1 }],
+        },
+      },
+      {
+        id: 'learn_knots',
+        text: 'Untangle all your wire hangers in the closet.',
+        effects: {
+          skills: [{ id: skillMapping.knotTying, level: 1 }],
         },
       },
     ],

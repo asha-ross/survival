@@ -1,7 +1,13 @@
 // src/hooks/useGameState.ts
 import { useReducer, useEffect } from 'react'
 import { GameState, GameActionUnion } from '../types/types'
-import { generateStartingInventory, initialSkills } from '../data/gameData'
+import { generateStartingInventory } from '../data/gameData'
+import { initialSkills } from '../data/skillData'
+
+//UPDATE THIS -- I think I forgot to add the new states.
+// Current issue: progressing through the story steps does not update resources (I added resources to Story Props in StoryCard, but need to work on the logic)
+//I'm thinking we need to focus on the Action Selection too, so that those update skills
+//Currently in the StorySteps, if you update a skill that works well so use as a structure
 
 const initialState: GameState = {
   character: {
@@ -21,6 +27,8 @@ const initialState: GameState = {
   preparednessScore: 0,
   currentLocation: 'Home',
   day: 1,
+  storyStep: 0,
+  itemsDiscovered: [],
 }
 
 const gameReducer = (state: GameState, action: GameActionUnion): GameState => {
@@ -102,7 +110,7 @@ export const useGameState = () => {
         },
       })
     }
-  }, [])
+  }, [gameState.resources.length, gameState.skills.length])
 
   return { gameState, dispatch }
 }

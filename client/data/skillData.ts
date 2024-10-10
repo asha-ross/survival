@@ -159,4 +159,14 @@ export const learnableSkills: Skill[] = [
     effects: ['Can make contaminated water safe to drink'],
     maxLevel: 5,
   },
+  {
+    id: 'repairs',
+    name: 'Basic Repairs',
+    level: 0,
+    icon: '',
+    description: 'Learn to use basic tools for essential repairs.',
+    requirements: [],
+    effects: ['Can make basic repairs to equipment and shelter.'],
+    maxLevel: 5,
+  },
 ]

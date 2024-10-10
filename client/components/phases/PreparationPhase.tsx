@@ -235,6 +235,7 @@ const PreparationPhase: React.FC = () => {
             <StoryCard
               currentStep={storySteps[gameState.storyStep]}
               onChoice={handleStoryChoice}
+              resources={gameState.resources}
               skills={gameState.skills}
             />
           ) : (
